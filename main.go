@@ -57,7 +57,9 @@ func IsHostCheckedOut(conv hanu.ConversationInterface) {
 }
 
 func CheckOutHost(conv hanu.ConversationInterface) {
-	isCheckedOut, err := vsphereimages.IsHostCheckedOut(context.TODO(), vSphereURL, vSphereInsecure, packerClusterPath)
+	ctx := context.TODO()
+
+	isCheckedOut, err := vsphereimages.IsHostCheckedOut(ctx, vSphereURL, vSphereInsecure, packerClusterPath)
 	if err != nil {
 		conv.Reply(":exclamation: Oops! I couldn't determine if a host is currently checked out. `%s`", err)
 		return
@@ -68,14 +70,27 @@ func CheckOutHost(conv hanu.ConversationInterface) {
 		return
 	}
 
-	conv.Reply("Checking out a host for image building. I'll let you know when it's ready!")
-	host, err := vsphereimages.CheckOutHost(context.TODO(), vSphereURL, vSphereInsecure, prodClusterPath, packerClusterPath, newProgressLogger())
+	// Choosing a host can take a little time, so this message makes the bot more responsive
+	conv.Reply("Choosing a host to check out…")
+
+	host, err := vsphereimages.SelectAvailableHost(ctx, vSphereURL, vSphereInsecure, prodClusterPath)
+	if err != nil {
+		conv.Reply(":exclamation: Oops! I couldn't choose a host to check out. `%s`", err)
+		return
+	}
+
+	// Similarly, actually checking out the host takes forever!
+	// Half the point of doing this with a bot is so you can get notified when it's done after
+	// you inevitably step away from your machine.
+	conv.Reply("Checking out :desktop_computer: %s for image building. I'll let you know when it's ready!", host.Name())
+
+	err = vsphereimages.CheckOutSelectedHost(ctx, vSphereURL, vSphereInsecure, host, packerClusterPath, newProgressLogger())
 	if err != nil {
 		conv.Reply(":exclamation: Oops! I couldn't check out the host. `%s`", err)
 		return
 	}
 
-	conv.Reply(":white_check_mark: Done! Host %s is checked out for image building.", host.Name())
+	conv.Reply(":white_check_mark: Done! :desktop_computer: %s is checked out for image building.", host.Name())
 }
 
 func CheckInHost(conv hanu.ConversationInterface) {
@@ -97,5 +112,5 @@ func CheckInHost(conv hanu.ConversationInterface) {
 		return
 	}
 
-	conv.Reply(":white_check_mark: Done! Host %s is back in production.", host.Name())
+	conv.Reply(":white_check_mark: Done! :desktop_computer: %s is back in production.", host.Name())
 }

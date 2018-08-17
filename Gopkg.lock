@@ -27,11 +27,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:28c9e161d01a6c4ce2a57fce8de93db5296154ff68723da59620d762431ed6c0"
+  digest = "1:50700215f6cfa10c7b7b9e0887c65e2f1c94ac3bf49893da7b4990d810696f54"
   name = "github.com/travis-ci/vsphere-images"
   packages = ["."]
   pruneopts = "UT"
-  revision = "505119f12f04076601e65c694f92b61d915299a0"
+  revision = "055d5f95de4c7bf276c5f33262a87a62cc8dfa40"
 
 [[projects]]
   branch = "master"
@@ -59,11 +59,12 @@
   revision = "badd514933ffc1d67c88e189fe16cb6d525be0d4"
 
 [[projects]]
-  digest = "1:7f03ab8e3f473fecb35d57f23b8e8d78f31d7149531e7ae2ed6c1c90a9a98eb4"
+  branch = "master"
+  digest = "1:7427036b6d926b3d1fa0773771820735b35554a98296f1074df440ee30a97296"
   name = "golang.org/x/net"
   packages = ["websocket"]
   pruneopts = "UT"
-  revision = "07b51741c1d6423d4a6abab1c49940ec09cb1aaf"
+  revision = "aaf60122140d3fcf75376d319f0554393160eb50"
 
 [solve-meta]
   analyzer-name = "dep"
