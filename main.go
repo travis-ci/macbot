@@ -2,24 +2,52 @@ package main
 
 import (
 	"context"
+	"flag"
 	"github.com/sbstjn/hanu"
 	"github.com/travis-ci/vsphere-images"
 	"log"
 	"net/url"
 	"os"
+	"os/signal"
+	"runtime/pprof"
 )
 
 var vSphereURL *url.URL
-var vSphereInsecure bool
+var vSphereInsecure = true
 
 const (
 	prodClusterPath   = "/pod-1/host/MacPro_Pod_1"
 	packerClusterPath = "/pod-1/host/packer_image_dev"
 )
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+
 func main() {
+	flag.Parse()
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+	}
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	go func() {
+		<-signalChan
+		log.Println("received interrupt, shutting down...")
+		if *cpuprofile != "" {
+			log.Println("writing CPU profile...")
+			pprof.StopCPUProfile()
+		}
+		os.Exit(0)
+	}()
+
 	var err error
-	vSphereInsecure = true
 	vSphereURL, err = url.Parse(os.Getenv("VSPHERE_URL"))
 	if err != nil {
 		log.Fatal(err)
