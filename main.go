@@ -13,15 +13,10 @@ import (
 	"strings"
 )
 
-var vSphereURL *url.URL
-var vSphereInsecure = true
-
-const (
-	prodClusterPath   = "/pod-1/host/MacPro_Pod_1"
-	packerClusterPath = "/pod-1/host/packer_image_dev"
-)
+var backend Backend
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+var debug = flag.Bool("debug", false, "use debugging backend, don't talk to vsphere")
 
 var rtm *slack.RTM
 
@@ -33,11 +28,7 @@ func main() {
 	}
 	setupInterruptHandler()
 
-	var err error
-	vSphereURL, err = url.Parse(os.Getenv("VSPHERE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
+	setupBackend()
 
 	token := os.Getenv("SLACK_API_TOKEN")
 	api := slack.New(token)
@@ -143,4 +134,32 @@ func setupInterruptHandler() {
 		}
 		os.Exit(0)
 	}()
+}
+
+func setupBackend() {
+	if *debug {
+		setupDebugBackend()
+	} else {
+		setupVSphereBackend()
+	}
+}
+
+func setupDebugBackend() {
+	backend = &DebugBackend{
+		Host: DebugHost("1.2.3.4"),
+	}
+}
+
+func setupVSphereBackend() {
+	vSphereURL, err := url.Parse(os.Getenv("VSPHERE_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	backend = &VSphereBackend{
+		URL:             vSphereURL,
+		Insecure:        true,
+		ProdClusterPath: "/pod-1/host/MacPro_Pod_1",
+		DevClusterPath:  "/pod-1/host/packer-image-dev",
+	}
 }

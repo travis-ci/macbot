@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"github.com/nlopes/slack"
-	"github.com/travis-ci/vsphere-images"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -12,7 +11,7 @@ var hostSemaphore = semaphore.NewWeighted(1)
 func IsHostCheckedOut(ctx context.Context, msg *slack.MessageEvent) {
 	typing(ctx)
 
-	isCheckedOut, err := vsphereimages.IsHostCheckedOut(context.TODO(), vSphereURL, vSphereInsecure, packerClusterPath)
+	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
 		reply(ctx, ":exclamation: Oops! I couldn't determine if a host is checked out already. `%s`", err)
 		return
@@ -26,9 +25,7 @@ func IsHostCheckedOut(ctx context.Context, msg *slack.MessageEvent) {
 }
 
 func CheckOutHost(ctx context.Context, msg *slack.MessageEvent) {
-	typing(ctx)
-
-	isCheckedOut, err := vsphereimages.IsHostCheckedOut(ctx, vSphereURL, vSphereInsecure, packerClusterPath)
+	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
 		reply(ctx, ":exclamation: Oops! I couldn't determine if a host is currently checked out. `%s`", err)
 		return
@@ -49,7 +46,7 @@ func CheckOutHost(ctx context.Context, msg *slack.MessageEvent) {
 	// Choosing a host can take a little time, so this message makes the bot more responsive
 	reply(ctx, "Choosing a host to check out…")
 
-	host, err := vsphereimages.SelectAvailableHost(ctx, vSphereURL, vSphereInsecure, prodClusterPath)
+	host, err := backend.SelectHost(ctx)
 	if err != nil {
 		reply(ctx, ":exclamation: Oops! I couldn't choose a host to check out. `%s`", err)
 		return
@@ -60,7 +57,7 @@ func CheckOutHost(ctx context.Context, msg *slack.MessageEvent) {
 	// you inevitably step away from your machine.
 	reply(ctx, "Checking out :desktop_computer: %s for image building. I'll let you know when it's ready!", host.Name())
 
-	err = vsphereimages.CheckOutSelectedHost(ctx, vSphereURL, vSphereInsecure, host, packerClusterPath, newProgressLogger())
+	err = backend.CheckOutHost(ctx, host)
 	if err != nil {
 		reply(ctx, ":exclamation: Oops! I couldn't check out the host. `%s`", err)
 		return
@@ -72,7 +69,7 @@ func CheckOutHost(ctx context.Context, msg *slack.MessageEvent) {
 func CheckInHost(ctx context.Context, msg *slack.MessageEvent) {
 	typing(ctx)
 
-	isCheckedOut, err := vsphereimages.IsHostCheckedOut(ctx, vSphereURL, vSphereInsecure, packerClusterPath)
+	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
 		reply(ctx, ":exclamation: Oops! I couldn't determine if a host is currently checked out. `%s`", err)
 		return
@@ -91,7 +88,7 @@ func CheckInHost(ctx context.Context, msg *slack.MessageEvent) {
 	defer hostSemaphore.Release(1)
 
 	reply(ctx, "Checking the host back into the production cluster...")
-	host, err := vsphereimages.CheckInHost(ctx, vSphereURL, vSphereInsecure, packerClusterPath, prodClusterPath, newProgressLogger())
+	host, err := backend.CheckInHost(ctx)
 	if err != nil {
 		reply(ctx, ":exclamation: Oops! I couldn't check the host back in. `%s`", err)
 		return
