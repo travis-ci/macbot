@@ -68,7 +68,7 @@ var (
 func dispatchCommand(ctx context.Context, msg *slack.MessageEvent) {
 	ctx = context.WithValue(ctx, contextKeyMessage, msg)
 
-	switch strings.TrimSpace(msg.Text) {
+	switch messageCommand(msg) {
 	case "checked out", "is checked out":
 		go IsHostCheckedOut(ctx, msg)
 	case "checkout host", "check out host":
@@ -80,16 +80,35 @@ func dispatchCommand(ctx context.Context, msg *slack.MessageEvent) {
 	}
 }
 
+func messageCommand(msg *slack.MessageEvent) string {
+	userID := rtm.GetInfo().User.ID
+	text := strings.TrimSpace(msg.Text)
+
+	mentionPrefix := "<@" + userID + "> "
+	if !isDirectMessage(msg) && !strings.HasPrefix(text, mentionPrefix) {
+		return ""
+	}
+
+	if strings.HasPrefix(text, mentionPrefix) {
+		text = text[len(mentionPrefix):len(text)]
+	}
+
+	return strings.TrimSpace(text)
+}
+
 func currentMessage(ctx context.Context) *slack.MessageEvent {
 	return ctx.Value(contextKeyMessage).(*slack.MessageEvent)
+}
+
+func isDirectMessage(msg *slack.MessageEvent) bool {
+	return strings.HasPrefix(msg.Channel, "D")
 }
 
 func reply(ctx context.Context, text string, args ...interface{}) {
 	msg := currentMessage(ctx)
 	text = fmt.Sprintf(text, args...)
 
-	isDM := strings.HasPrefix(msg.Channel, "D")
-	if !isDM {
+	if !isDirectMessage(msg) {
 		text = fmt.Sprintf("<@%s>: %s", msg.User, text)
 	}
 
