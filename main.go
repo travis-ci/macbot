@@ -84,7 +84,7 @@ func messageCommand(msg *slack.MessageEvent) string {
 		text = text[len(mentionPrefix):len(text)]
 	}
 
-	return strings.TrimSpace(text)
+	return strings.ToLower(strings.TrimSpace(text))
 }
 
 func currentMessage(ctx context.Context) *slack.MessageEvent {
@@ -110,6 +110,25 @@ func reply(ctx context.Context, text string, args ...interface{}) {
 func typing(ctx context.Context) {
 	msg := currentMessage(ctx)
 	rtm.SendMessage(rtm.NewTypingMessage(msg.Channel))
+}
+
+func replyError(ctx context.Context, text string, err error) {
+	msg := currentMessage(ctx)
+
+	errorText := text
+	if err != nil {
+		errorText = fmt.Sprintf("%s\n```%s```", errorText, err)
+	}
+
+	params := slack.NewPostMessageParameters()
+	params.AsUser = true
+	params.Attachments = []slack.Attachment{
+		{
+			Text:  fmt.Sprintf("Sorry, <@%s>! %s", msg.User, errorText),
+			Color: "danger",
+		},
+	}
+	rtm.PostMessage(msg.Channel, "", params)
 }
 
 func measureCPUUsage(profile string) {
