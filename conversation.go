@@ -78,13 +78,23 @@ func (c *Conversation) ReplyWithError(text string, err error) {
 		text = fmt.Sprintf("%s\n```%s```", text, err)
 	}
 
-	params := slack.NewPostMessageParameters()
-	params.AsUser = true
-	params.Attachments = []slack.Attachment{
-		{
-			Text:  fmt.Sprintf("Sorry, <@%s>! %s", c.User(), text),
-			Color: "danger",
-		},
+	attachment := slack.Attachment{
+		Text:  fmt.Sprintf("Sorry, <@%s>! %s", c.User(), text),
+		Color: "danger",
 	}
-	rtm.PostMessage(c.Channel(), "", params)
+	c.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
+}
+
+// ReplyWithOptions sends a message using low-level options.
+//
+// Returns the timestamp of the message, with can be used later to update the message.
+func (c *Conversation) ReplyWithOptions(options ...slack.MsgOption) string {
+	// Always default to sending as the bot user.
+	// Without this option, messages show up as being from "bot" instead of "macbot."
+	options = append([]slack.MsgOption{
+		slack.MsgOptionAsUser(true),
+	}, options...)
+
+	_, timestamp, _, _ := rtm.Client.SendMessage(c.Channel(), options...)
+	return timestamp
 }

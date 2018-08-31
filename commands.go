@@ -52,7 +52,7 @@ func CheckOutHost(ctx context.Context, conv *Conversation) {
 	attachment := slack.Attachment{
 		Text: "Choosing a host to check out for <@" + conv.User() + ">…",
 	}
-	_, timestamp, _, _ := rtm.Client.SendMessage(conv.Channel(), slack.MsgOptionAsUser(true), slack.MsgOptionAttachments(attachment))
+	timestamp := conv.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
 
 	host, err := backend.SelectHost(ctx)
 	if err != nil {
@@ -70,7 +70,7 @@ func CheckOutHost(ctx context.Context, conv *Conversation) {
 			Value: fmt.Sprintf(":desktop_computer: %s", host.Name()),
 		},
 	}
-	rtm.Client.SendMessage(conv.Channel(), slack.MsgOptionUpdate(timestamp), slack.MsgOptionAsUser(true), slack.MsgOptionAttachments(attachment))
+	conv.ReplyWithOptions(slack.MsgOptionUpdate(timestamp), slack.MsgOptionAttachments(attachment))
 
 	err = backend.CheckOutHost(ctx, host)
 	if err != nil {
@@ -80,7 +80,7 @@ func CheckOutHost(ctx context.Context, conv *Conversation) {
 
 	attachment.Text = fmt.Sprintf("Successfully checked out host for <@%s>!", conv.User())
 	attachment.Color = "good"
-	rtm.Client.SendMessage(conv.Channel(), slack.MsgOptionAsUser(true), slack.MsgOptionAttachments(attachment))
+	conv.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
 }
 
 // CheckInHost moves a host from the dev cluster to the production cluster.
@@ -108,7 +108,7 @@ func CheckInHost(ctx context.Context, conv *Conversation) {
 	attachment := slack.Attachment{
 		Text: "Checking the host in for <@" + conv.User() + ">…",
 	}
-	rtm.Client.SendMessage(conv.Channel(), slack.MsgOptionAsUser(true), slack.MsgOptionAttachments(attachment))
+	conv.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
 
 	host, err := backend.CheckInHost(ctx)
 	if err != nil {
@@ -124,5 +124,5 @@ func CheckInHost(ctx context.Context, conv *Conversation) {
 			Value: fmt.Sprintf(":desktop_computer: %s", host.Name()),
 		},
 	}
-	rtm.Client.SendMessage(conv.Channel(), slack.MsgOptionAsUser(true), slack.MsgOptionAttachments(attachment))
+	conv.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
 }
