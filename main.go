@@ -179,6 +179,6 @@ func setupVSphereBackend() {
 		URL:             vSphereURL,
 		Insecure:        true,
 		ProdClusterPath: "/pod-1/host/MacPro_Pod_1",
-		DevClusterPath:  "/pod-1/host/packer-image-dev",
+		DevClusterPath:  "/pod-1/host/packer_image_dev",
 	}
 }
