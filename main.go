@@ -3,14 +3,12 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"github.com/nlopes/slack"
 	"log"
 	"net/url"
 	"os"
 	"os/signal"
 	"runtime/pprof"
-	"strings"
 )
 
 var backend Backend
@@ -50,85 +48,19 @@ func main() {
 	}
 }
 
-type contextKey string
-
-var (
-	contextKeyMessage = contextKey("message")
-)
-
 func dispatchCommand(ctx context.Context, msg *slack.MessageEvent) {
-	ctx = context.WithValue(ctx, contextKeyMessage, msg)
+	conv := NewConversation(msg)
 
-	switch messageCommand(msg) {
+	switch conv.CommandText() {
 	case "checked out", "is checked out":
-		go IsHostCheckedOut(ctx, msg)
+		go IsHostCheckedOut(ctx, conv)
 	case "checkout host", "check out host":
-		go CheckOutHost(ctx, msg)
+		go CheckOutHost(ctx, conv)
 	case "checkin host", "check in host":
-		go CheckInHost(ctx, msg)
+		go CheckInHost(ctx, conv)
 	default:
 		// ignore all other messages
 	}
-}
-
-func messageCommand(msg *slack.MessageEvent) string {
-	userID := rtm.GetInfo().User.ID
-	text := strings.TrimSpace(msg.Text)
-
-	mentionPrefix := "<@" + userID + "> "
-	if !isDirectMessage(msg) && !strings.HasPrefix(text, mentionPrefix) {
-		return ""
-	}
-
-	if strings.HasPrefix(text, mentionPrefix) {
-		text = text[len(mentionPrefix):len(text)]
-	}
-
-	return strings.ToLower(strings.TrimSpace(text))
-}
-
-func currentMessage(ctx context.Context) *slack.MessageEvent {
-	return ctx.Value(contextKeyMessage).(*slack.MessageEvent)
-}
-
-func isDirectMessage(msg *slack.MessageEvent) bool {
-	return strings.HasPrefix(msg.Channel, "D")
-}
-
-func reply(ctx context.Context, text string, args ...interface{}) {
-	msg := currentMessage(ctx)
-	text = fmt.Sprintf(text, args...)
-
-	if !isDirectMessage(msg) {
-		text = fmt.Sprintf("<@%s>: %s", msg.User, text)
-	}
-
-	m := rtm.NewOutgoingMessage(text, msg.Channel)
-	rtm.SendMessage(m)
-}
-
-func typing(ctx context.Context) {
-	msg := currentMessage(ctx)
-	rtm.SendMessage(rtm.NewTypingMessage(msg.Channel))
-}
-
-func replyError(ctx context.Context, text string, err error) {
-	msg := currentMessage(ctx)
-
-	errorText := text
-	if err != nil {
-		errorText = fmt.Sprintf("%s\n```%s```", errorText, err)
-	}
-
-	params := slack.NewPostMessageParameters()
-	params.AsUser = true
-	params.Attachments = []slack.Attachment{
-		{
-			Text:  fmt.Sprintf("Sorry, <@%s>! %s", msg.User, errorText),
-			Color: "danger",
-		},
-	}
-	rtm.PostMessage(msg.Channel, "", params)
 }
 
 func measureCPUUsage(profile string) {
