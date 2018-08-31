@@ -27,22 +27,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ad65c21cad052ae0b994f7124129b26e8125d2a06c2316ee9e97cb23ba75f527"
-  name = "github.com/sbstjn/allot"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "1f2349af5ccd74c1a8d8fe4d1bf688645b628321"
-
-[[projects]]
-  branch = "master"
-  digest = "1:10324863fe8db61f063627fdada2662d205c56a98b9f43fc25d42caa4d22ef10"
-  name = "github.com/sbstjn/hanu"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "755ac633fa6710a2043f167927ecd8899d53d205"
-
-[[projects]]
-  branch = "master"
   digest = "1:50700215f6cfa10c7b7b9e0887c65e2f1c94ac3bf49893da7b4990d810696f54"
   name = "github.com/travis-ci/vsphere-images"
   packages = ["."]
@@ -74,20 +58,11 @@
   pruneopts = "UT"
   revision = "badd514933ffc1d67c88e189fe16cb6d525be0d4"
 
-[[projects]]
-  branch = "master"
-  digest = "1:7427036b6d926b3d1fa0773771820735b35554a98296f1074df440ee30a97296"
-  name = "golang.org/x/net"
-  packages = ["websocket"]
-  pruneopts = "UT"
-  revision = "aaf60122140d3fcf75376d319f0554393160eb50"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/nlopes/slack",
-    "github.com/sbstjn/hanu",
     "github.com/travis-ci/vsphere-images",
     "github.com/vmware/govmomi/vim25/progress",
   ]

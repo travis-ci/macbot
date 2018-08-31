@@ -24,18 +24,17 @@
 #   go-tests = true
 #   unused-packages = true
 
+[prune]
+  go-tests = true
+  unused-packages = true
 
 [[constraint]]
   branch = "master"
-  name = "github.com/sbstjn/hanu"
+  name = "github.com/travis-ci/vsphere-images"
 
 [[constraint]]
   branch = "master"
   name = "github.com/vmware/govmomi"
-
-[prune]
-  go-tests = true
-  unused-packages = true
 
 [[constraint]]
   name = "github.com/nlopes/slack"
