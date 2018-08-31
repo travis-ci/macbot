@@ -70,11 +70,11 @@ func dispatchCommand(ctx context.Context, msg *slack.MessageEvent) {
 
 	switch strings.TrimSpace(msg.Text) {
 	case "checked out", "is checked out":
-		IsHostCheckedOut(ctx, msg)
+		go IsHostCheckedOut(ctx, msg)
 	case "checkout host", "check out host":
-		CheckOutHost(ctx, msg)
+		go CheckOutHost(ctx, msg)
 	case "checkin host", "check in host":
-		CheckInHost(ctx, msg)
+		go CheckInHost(ctx, msg)
 	default:
 		// ignore all other messages
 	}
