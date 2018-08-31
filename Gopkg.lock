@@ -58,6 +58,22 @@
   pruneopts = "UT"
   revision = "badd514933ffc1d67c88e189fe16cb6d525be0d4"
 
+[[projects]]
+  branch = "master"
+  digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
+  name = "golang.org/x/net"
+  packages = ["context"]
+  pruneopts = "UT"
+  revision = "8a410e7b638dca158bf9e766925842f6651ff828"
+
+[[projects]]
+  branch = "master"
+  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
+  name = "golang.org/x/sync"
+  packages = ["semaphore"]
+  pruneopts = "UT"
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -65,6 +81,7 @@
     "github.com/nlopes/slack",
     "github.com/travis-ci/vsphere-images",
     "github.com/vmware/govmomi/vim25/progress",
+    "golang.org/x/sync/semaphore",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
