@@ -1,6 +1,14 @@
+sudo: true
 services:
   - docker
+before_install:
+  - echo "$DOCKER_PASSWORD" | docker login "$DOCKER_USERNAME" --password-stdin
 script:
-  - docker build -t macbot .
+  - docker build -t travis-ci/macbot .
+deploy:
+  provider: script
+  script: docker push travis-ci/macbot
+  on:
+    branch: master
 notifications:
   email: false
