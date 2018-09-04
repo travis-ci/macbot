@@ -2,7 +2,7 @@ sudo: true
 services:
   - docker
 script:
-  - docker build -t travis-ci/macbot .
+  - docker build -t travisci/macbot .
 deploy:
   provider: script
   script: bin/docker-push
