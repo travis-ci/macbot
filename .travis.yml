@@ -1,4 +1,5 @@
 sudo: true
+language: go
 go: "1.11"
 services:
   - docker
