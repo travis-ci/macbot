@@ -1,4 +1,5 @@
 sudo: true
+go: "1.11"
 services:
   - docker
 before_install:
