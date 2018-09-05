@@ -37,30 +37,28 @@ func main() {
 	rtm = api.NewRTM()
 	go rtm.ManageConnection()
 
+	router := NewRouter()
+	router.HandleFunc("checked out", IsHostCheckedOut)
+	router.HandleFunc("is checked out", IsHostCheckedOut)
+	router.HandleFunc("checkout host", CheckOutHost)
+	router.HandleFunc("check out host", CheckOutHost)
+	router.HandleFunc("checkin host", CheckInHost)
+	router.HandleFunc("check in host", CheckInHost)
+
 	for msg := range rtm.IncomingEvents {
 		ctx := context.Background()
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
-			dispatchCommand(ctx, ev)
+			dispatchCommand(ctx, router, ev)
 		default:
 			// ignore
 		}
 	}
 }
 
-func dispatchCommand(ctx context.Context, msg *slack.MessageEvent) {
+func dispatchCommand(ctx context.Context, router *Router, msg *slack.MessageEvent) {
 	conv := NewConversation(msg)
-
-	switch conv.CommandText() {
-	case "checked out", "is checked out":
-		go IsHostCheckedOut(ctx, conv)
-	case "checkout host", "check out host":
-		go CheckOutHost(ctx, conv)
-	case "checkin host", "check in host":
-		go CheckInHost(ctx, conv)
-	default:
-		// ignore all other messages
-	}
+	go router.Reply(ctx, conv)
 }
 
 func measureCPUUsage(profile string) {
