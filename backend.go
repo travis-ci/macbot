@@ -62,6 +62,7 @@ type DebugHost string
 type DebugBackend struct {
 	Host         DebugHost
 	isCheckedOut bool
+	disableSleep bool
 }
 
 func (b *DebugBackend) IsHostCheckedOut(ctx context.Context) (bool, error) {
@@ -69,18 +70,27 @@ func (b *DebugBackend) IsHostCheckedOut(ctx context.Context) (bool, error) {
 }
 
 func (b *DebugBackend) SelectHost(ctx context.Context) (Host, error) {
-	time.Sleep(time.Second)
+	if !b.disableSleep {
+		time.Sleep(time.Second)
+	}
+
 	return b.Host, nil
 }
 
 func (b *DebugBackend) CheckOutHost(ctx context.Context, h Host) error {
-	time.Sleep(10 * time.Second)
+	if !b.disableSleep {
+		time.Sleep(10 * time.Second)
+	}
+
 	b.isCheckedOut = true
 	return nil
 }
 
 func (b *DebugBackend) CheckInHost(ctx context.Context) (Host, error) {
-	time.Sleep(time.Second)
+	if !b.disableSleep {
+		time.Sleep(time.Second)
+	}
+
 	b.isCheckedOut = false
 	return b.Host, nil
 }
