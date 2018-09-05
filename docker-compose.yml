@@ -1,0 +1,11 @@
+# Brings up a version of macbot for development
+version: "3"
+services:
+  macbot:
+    build: .
+    env_file: .env.dev
+    command: ["-debug"]
+    networks:
+      - bot
+networks:
+  bot:
