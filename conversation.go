@@ -7,24 +7,34 @@ import (
 )
 
 // Conversation provides an easy way for commands to respond to the user.
-type Conversation struct {
+type Conversation interface {
+	User() string
+	Channel() string
+	CommandText() string
+	IsDirectMessage() bool
+	Reply(string, ...interface{})
+	ReplyWithError(string, error)
+	ReplyWithOptions(...slack.MsgOption) string
+}
+
+type slackConversation struct {
 	Event *slack.MessageEvent
 }
 
 // NewConversation creates a conversation from an incoming Slack message.
-func NewConversation(event *slack.MessageEvent) *Conversation {
-	return &Conversation{
+func NewConversation(event *slack.MessageEvent) Conversation {
+	return &slackConversation{
 		Event: event,
 	}
 }
 
 // User returns the ID of the user who initiated the conversation.
-func (c *Conversation) User() string {
+func (c *slackConversation) User() string {
 	return c.Event.User
 }
 
 // Channel returns the ID of the channel where the conversation is happening.
-func (c *Conversation) Channel() string {
+func (c *slackConversation) Channel() string {
 	return c.Event.Channel
 }
 
@@ -32,7 +42,7 @@ func (c *Conversation) Channel() string {
 //
 // If the message was not directed to the bot, either through DM or an @mention,
 // CommandText returns an empty string.
-func (c *Conversation) CommandText() string {
+func (c *slackConversation) CommandText() string {
 	userID := rtm.GetInfo().User.ID
 	text := strings.TrimSpace(c.Event.Text)
 
@@ -49,15 +59,15 @@ func (c *Conversation) CommandText() string {
 }
 
 // IsDirectMessage returns true if the conversation was started via direct message.
-func (c *Conversation) IsDirectMessage() bool {
-	return strings.HasPrefix(c.Event.Channel, "D")
+func (c *slackConversation) IsDirectMessage() bool {
+	return strings.HasPrefix(c.Channel(), "D")
 }
 
 // Reply sends a basic text reply to the conversation.
 //
 // If the conversation is not a DM, the message will start with an @mention of the
 // user who initiated the conversation.
-func (c *Conversation) Reply(text string, args ...interface{}) {
+func (c *slackConversation) Reply(text string, args ...interface{}) {
 	text = fmt.Sprintf(text, args...)
 
 	if !c.IsDirectMessage() {
@@ -73,7 +83,7 @@ func (c *Conversation) Reply(text string, args ...interface{}) {
 // The message will be prefixed with an apology directed at the user who initiated
 // the conversation. If err is not nil, a code block will be included at the end of
 // the message to show the string representation of the error.
-func (c *Conversation) ReplyWithError(text string, err error) {
+func (c *slackConversation) ReplyWithError(text string, err error) {
 	if err != nil {
 		text = fmt.Sprintf("%s\n```%s```", text, err)
 	}
@@ -88,7 +98,7 @@ func (c *Conversation) ReplyWithError(text string, err error) {
 // ReplyWithOptions sends a message using low-level options.
 //
 // Returns the timestamp of the message, with can be used later to update the message.
-func (c *Conversation) ReplyWithOptions(options ...slack.MsgOption) string {
+func (c *slackConversation) ReplyWithOptions(options ...slack.MsgOption) string {
 	// Always default to sending as the bot user.
 	// Without this option, messages show up as being from "bot" instead of "macbot."
 	options = append([]slack.MsgOption{

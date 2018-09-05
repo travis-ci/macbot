@@ -10,7 +10,7 @@ import (
 var hostSemaphore = semaphore.NewWeighted(1)
 
 // IsHostCheckedOut checks if a host is present in the dev cluster.
-func IsHostCheckedOut(ctx context.Context, conv *Conversation) {
+func IsHostCheckedOut(ctx context.Context, conv Conversation) {
 	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
 		conv.ReplyWithError("I couldn't determine if a host is checked out already.", err)
@@ -29,7 +29,7 @@ func IsHostCheckedOut(ctx context.Context, conv *Conversation) {
 //
 // If there is already a host in the dev cluster, it informs the user who asked. Only one user can
 // attempt to check out/in a host at a time: other users will get an error message when they try.
-func CheckOutHost(ctx context.Context, conv *Conversation) {
+func CheckOutHost(ctx context.Context, conv Conversation) {
 	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
 		conv.ReplyWithError("I couldn't determine if a host is currently checked out.", err)
@@ -86,7 +86,7 @@ func CheckOutHost(ctx context.Context, conv *Conversation) {
 // CheckInHost moves a host from the dev cluster to the production cluster.
 //
 // If there is no host in the dev cluster, it informs the user who asked.
-func CheckInHost(ctx context.Context, conv *Conversation) {
+func CheckInHost(ctx context.Context, conv Conversation) {
 	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
 		conv.ReplyWithError("I couldn't determine if a host is currently checked out.", err)
