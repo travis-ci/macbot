@@ -2,6 +2,7 @@ sudo: true
 services:
   - docker
 script:
+  - go test
   - docker build -t travisci/macbot .
 deploy:
   provider: script
