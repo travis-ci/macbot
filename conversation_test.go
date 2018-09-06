@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"strings"
 )
 
 type testConversation struct {
@@ -34,7 +35,7 @@ func (c *testConversation) CommandText() string {
 }
 
 func (c *testConversation) IsDirectMessage() bool {
-	return true
+	return strings.HasPrefix(c.channel, "D")
 }
 
 func (c *testConversation) Send(b *MessageBuilder) string {

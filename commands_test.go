@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"strings"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -19,9 +19,7 @@ func TestIsHostCheckedOut(t *testing.T) {
 	IsHostCheckedOut(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	if !strings.HasSuffix(reply.text, "There is no host checked out for building images.") {
-		t.Fatal("unexpected reply, got", reply)
-	}
+	require.Contains(t, reply.text, "There is no host checked out for building images.")
 
 	// now check out a host and try again
 	host, _ := backend.SelectHost(context.TODO())
@@ -31,9 +29,7 @@ func TestIsHostCheckedOut(t *testing.T) {
 	IsHostCheckedOut(context.TODO(), conv)
 
 	reply = conv.replies[0]
-	if !strings.HasSuffix(reply.text, "There is a host currently checked out for building images.") {
-		t.Fatal("unexpected reply, got", reply)
-	}
+	require.Contains(t, reply.text, "There is a host currently checked out for building images.")
 }
 
 func TestCheckOutHost(t *testing.T) {
@@ -41,46 +37,24 @@ func TestCheckOutHost(t *testing.T) {
 	conv := newTestConversation("check out host")
 	CheckOutHost(context.TODO(), conv)
 
-	if len(conv.replies) != 3 {
-		t.Fatal("expected 3 replies, got", len(conv.replies))
-	}
+	require.Len(t, conv.replies, 3)
 	reply := conv.replies[0]
-	if reply.text != "Choosing a host to check out for <@user>…" {
-		t.Fatal("unexpected reply 0, got", reply.text)
-	}
-	if !reply.isAttachment {
-		t.Fatal("expected reply 0 to be an attachment")
-	}
+	require.Equal(t, "Choosing a host to check out for <@user>…", reply.text)
+	require.True(t, reply.isAttachment)
 
 	reply = conv.replies[1]
-	if reply.text != "Checking out host for <@user>…" {
-		t.Fatal("unexpected reply 1, got", reply.text)
-	}
+	require.Equal(t, "Checking out host for <@user>…", reply.text)
 	f := messageField{"Host", ":desktop_computer: 1.2.3.4"}
-	if reply.fields[0] != f {
-		t.Fatal("expected host field for fake host, got", reply.fields[0])
-	}
-	if reply.timestamp == "" {
-		t.Fatal("expected reply 1 to be updating reply 0")
-	}
+	require.Equal(t, f, reply.fields[0])
+	require.NotEmpty(t, reply.timestamp)
 
 	reply = conv.replies[2]
-	if reply.text != "Successfully checked out host for <@user>!" {
-		t.Fatal("unexpected reply 2, got", reply.text)
-	}
-	if reply.fields[0] != f {
-		t.Fatal("expected host field for fake host, got", reply.fields[0])
-	}
-	if reply.color != "good" {
-		t.Fatal("expected reply 2 to be good color, got", reply.color)
-	}
-	if reply.timestamp != "" {
-		t.Fatal("expected reply 2 to be its own message")
-	}
+	require.Equal(t, "Successfully checked out host for <@user>!", reply.text)
+	require.Equal(t, f, reply.fields[0])
+	require.Equal(t, "good", reply.color)
+	require.Empty(t, reply.timestamp, "expected reply 2 to be its own message")
 
-	if !backend.(*DebugBackend).isCheckedOut {
-		t.Fatal("expected fake host to be checked out")
-	}
+	require.True(t, backend.(*DebugBackend).isCheckedOut)
 }
 
 func TestCheckOutHostAlreadyOut(t *testing.T) {
@@ -92,9 +66,7 @@ func TestCheckOutHostAlreadyOut(t *testing.T) {
 	CheckOutHost(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	if reply.text != "Sorry, <@user>! Looks like there's already a host checked out for building images!" {
-		t.Fatal("unexpected reply, got", reply.text)
-	}
+	require.Equal(t, "Sorry, <@user>! Looks like there's already a host checked out for building images!", reply.text)
 }
 
 func TestCheckInHost(t *testing.T) {
@@ -105,35 +77,19 @@ func TestCheckInHost(t *testing.T) {
 	conv := newTestConversation("check in host")
 	CheckInHost(context.TODO(), conv)
 
-	if len(conv.replies) != 2 {
-		t.Fatal("expected 2 replies, got", len(conv.replies))
-	}
+	require.Len(t, conv.replies, 2)
 	reply := conv.replies[0]
-	if reply.text != "Checking the host in for <@user>…" {
-		t.Fatal("unexpected reply 0, got", reply.text)
-	}
-	if !reply.isAttachment {
-		t.Fatal("expected reply 0 to be an attachment")
-	}
+	require.Equal(t, "Checking the host in for <@user>…", reply.text)
+	require.True(t, reply.isAttachment)
 
 	reply = conv.replies[1]
-	if reply.text != "Successfully checked in host for <@user>!" {
-		t.Fatal("unexpected reply 1, got", reply.text)
-	}
+	require.Equal(t, "Successfully checked in host for <@user>!", reply.text)
 	f := messageField{"Host", ":desktop_computer: 1.2.3.4"}
-	if reply.fields[0] != f {
-		t.Fatal("expected host field for fake host, got", reply.fields[0])
-	}
-	if reply.color != "good" {
-		t.Fatal("expected reply 1 to be good color, got", reply.color)
-	}
-	if reply.timestamp != "" {
-		t.Fatal("expected reply 1 to be its own message")
-	}
+	require.Equal(t, f, reply.fields[0])
+	require.Equal(t, "good", reply.color)
+	require.Empty(t, reply.timestamp, "expected reply 1 to be its own message")
 
-	if backend.(*DebugBackend).isCheckedOut {
-		t.Fatal("expected fake host to be checked in")
-	}
+	require.False(t, backend.(*DebugBackend).isCheckedOut)
 }
 
 func TestCheckInHostAlreadyIn(t *testing.T) {
@@ -143,7 +99,5 @@ func TestCheckInHostAlreadyIn(t *testing.T) {
 	CheckInHost(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	if reply.text != "Sorry, <@user>! Looks like there isn't a host checked out right now!" {
-		t.Fatal("unexpected reply, got", reply.text)
-	}
+	require.Equal(t, "Sorry, <@user>! Looks like there isn't a host checked out right now!", reply.text)
 }

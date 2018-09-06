@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -11,9 +12,7 @@ func TestEmptyRouterKnowsNothing(t *testing.T) {
 	router.Reply(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	if reply.text != "Sorry, <@user>! I don't know how to answer that." {
-		t.Fatal("unexpected reply, got", reply)
-	}
+	require.Equal(t, "Sorry, <@user>! I don't know how to answer that.", reply.text)
 }
 
 func TestRouterSingleUnknownCommand(t *testing.T) {
@@ -25,9 +24,7 @@ func TestRouterSingleUnknownCommand(t *testing.T) {
 	router.Reply(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	if reply.text != "Sorry, <@user>! I don't know how to answer that." {
-		t.Fatal("unexpected reply, got", reply)
-	}
+	require.Equal(t, "Sorry, <@user>! I don't know how to answer that.", reply.text)
 }
 
 func TestRouterSingleMatchingCommand(t *testing.T) {
@@ -39,9 +36,7 @@ func TestRouterSingleMatchingCommand(t *testing.T) {
 	router.Reply(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	if reply.text != "Some command" {
-		t.Fatal("unexpected reply, got", reply)
-	}
+	require.Equal(t, "<@user>: Some command", reply.text)
 }
 
 func TestRouterMultipleCommands(t *testing.T) {
@@ -56,9 +51,7 @@ func TestRouterMultipleCommands(t *testing.T) {
 	router.Reply(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	if reply.text != "Some command" {
-		t.Fatal("unexpected reply, got", reply)
-	}
+	require.Equal(t, "<@user>: Some command", reply.text)
 }
 
 func TestRouterIrrelevantMessage(t *testing.T) {
@@ -69,7 +62,5 @@ func TestRouterIrrelevantMessage(t *testing.T) {
 	conv := newTestConversation("")
 	router.Reply(context.TODO(), conv)
 
-	if len(conv.replies) > 0 {
-		t.Fatal("expected no replies to irrelevant message")
-	}
+	require.Empty(t, conv.replies)
 }
