@@ -12,9 +12,7 @@ type Conversation interface {
 	Channel() string
 	CommandText() string
 	IsDirectMessage() bool
-	Reply(string, ...interface{})
-	ReplyWithError(string, error)
-	ReplyWithOptions(...slack.MsgOption) string
+	Send(*MessageBuilder) string
 }
 
 type slackConversation struct {
@@ -44,6 +42,11 @@ func (c *slackConversation) Channel() string {
 // CommandText returns an empty string.
 func (c *slackConversation) CommandText() string {
 	userID := rtm.GetInfo().User.ID
+	// Ignore messages that the bot sent, no matter what
+	if c.User() == userID {
+		return ""
+	}
+
 	text := strings.TrimSpace(c.Event.Text)
 
 	mentionPrefix := "<@" + userID + "> "
@@ -63,48 +66,48 @@ func (c *slackConversation) IsDirectMessage() bool {
 	return strings.HasPrefix(c.Channel(), "D")
 }
 
-// Reply sends a basic text reply to the conversation.
-//
-// If the conversation is not a DM, the message will start with an @mention of the
-// user who initiated the conversation.
-func (c *slackConversation) Reply(text string, args ...interface{}) {
-	text = fmt.Sprintf(text, args...)
-
-	if !c.IsDirectMessage() {
-		text = fmt.Sprintf("<@%s>: %s", c.User(), text)
-	}
-
-	m := rtm.NewOutgoingMessage(text, c.Channel())
-	rtm.SendMessage(m)
-}
-
-// ReplyWithError sends a reply message indicating that an error occurred.
-//
-// The message will be prefixed with an apology directed at the user who initiated
-// the conversation. If err is not nil, a code block will be included at the end of
-// the message to show the string representation of the error.
-func (c *slackConversation) ReplyWithError(text string, err error) {
-	if err != nil {
-		text = fmt.Sprintf("%s\n```%s```", text, err)
-	}
-
-	attachment := slack.Attachment{
-		Text:  fmt.Sprintf("Sorry, <@%s>! %s", c.User(), text),
-		Color: "danger",
-	}
-	c.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
-}
-
-// ReplyWithOptions sends a message using low-level options.
-//
-// Returns the timestamp of the message, with can be used later to update the message.
-func (c *slackConversation) ReplyWithOptions(options ...slack.MsgOption) string {
-	// Always default to sending as the bot user.
-	// Without this option, messages show up as being from "bot" instead of "macbot."
-	options = append([]slack.MsgOption{
-		slack.MsgOptionAsUser(true),
-	}, options...)
-
+func (c *slackConversation) Send(b *MessageBuilder) string {
+	options := messageOptions(b)
+	// TODO: check and probably log the error here
 	_, timestamp, _, _ := rtm.Client.SendMessage(c.Channel(), options...)
 	return timestamp
+}
+
+func messageOptions(b *MessageBuilder) []slack.MsgOption {
+	// Always default to sending as the bot user.
+	// Without this option, messages show up as being from "bot" instead of "macbot."
+	options := []slack.MsgOption{
+		slack.MsgOptionAsUser(true),
+	}
+
+	if b.text != "" {
+		text := b.text
+		if b.error != nil {
+			text = fmt.Sprintf("%s\n```%s```", text, b.error)
+		}
+
+		if b.isAttachment {
+			attachment := slack.Attachment{
+				Text: text,
+			}
+			if b.color != "" {
+				attachment.Color = b.color
+			}
+			for _, field := range b.fields {
+				attachment.Fields = append(attachment.Fields, slack.AttachmentField{
+					Title: field.title,
+					Value: field.value,
+				})
+			}
+			options = append(options, slack.MsgOptionAttachments(attachment))
+		} else {
+			options = append(options, slack.MsgOptionText(text, false))
+		}
+	}
+
+	if b.timestamp != "" {
+		options = append(options, slack.MsgOptionUpdate(b.timestamp))
+	}
+
+	return options
 }

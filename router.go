@@ -41,5 +41,5 @@ func (r *Router) Reply(ctx context.Context, conv Conversation) {
 }
 
 func unknownCommand(ctx context.Context, conv Conversation) {
-	conv.ReplyWithError("I don't know how to answer that.", nil)
+	ReplyTo(conv).ErrorText("I don't know how to answer that.").Send()
 }

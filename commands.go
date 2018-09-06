@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"github.com/nlopes/slack"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -13,14 +11,16 @@ var hostSemaphore = semaphore.NewWeighted(1)
 func IsHostCheckedOut(ctx context.Context, conv Conversation) {
 	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
-		conv.ReplyWithError("I couldn't determine if a host is checked out already.", err)
+		ReplyTo(conv).
+			ErrorText("I couldn't determine if a host is checked out already.").
+			Error(err).Send()
 		return
 	}
 
 	if isCheckedOut {
-		conv.Reply(":white_check_mark: There is a host currently checked out for building images.")
+		ReplyTo(conv).Text(":white_check_mark: There is a host currently checked out for building images.").Send()
 	} else {
-		conv.Reply(":heavy_multiplication_x: There is no host checked out for building images.")
+		ReplyTo(conv).Text(":heavy_multiplication_x: There is no host checked out for building images.").Send()
 	}
 }
 
@@ -32,55 +32,48 @@ func IsHostCheckedOut(ctx context.Context, conv Conversation) {
 func CheckOutHost(ctx context.Context, conv Conversation) {
 	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
-		conv.ReplyWithError("I couldn't determine if a host is currently checked out.", err)
+		ReplyTo(conv).ErrorText("I couldn't determine if a host is currently checked out.").Error(err).Send()
 		return
 	}
 
 	if isCheckedOut {
-		conv.ReplyWithError("Looks like there's already a host checked out for building images!", nil)
+		ReplyTo(conv).ErrorText("Looks like there's already a host checked out for building images!").Send()
 		return
 	}
 
 	canCheckOut := hostSemaphore.TryAcquire(1)
 	if !canCheckOut {
-		conv.ReplyWithError("Someone is already trying to check in/out a host right now, try again later!", nil)
+		ReplyTo(conv).ErrorText("Someone is already trying to check in/out a host right now, try again later!").Send()
 		return
 	}
 	defer hostSemaphore.Release(1)
 
 	// Choosing a host can take a little time, so this message makes the bot more responsive
-	attachment := slack.Attachment{
-		Text: "Choosing a host to check out for <@" + conv.User() + ">…",
-	}
-	timestamp := conv.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
+	msg := ReplyTo(conv).AttachText("Choosing a host to check out for <@%s>…", conv.User()).Send()
 
 	host, err := backend.SelectHost(ctx)
 	if err != nil {
-		conv.ReplyWithError("I couldn't choose a host to check out.", err)
+		ReplyTo(conv).ErrorText("I couldn't choose a host to check out.").Error(err).Send()
 		return
 	}
 
 	// Similarly, actually checking out the host takes forever!
 	// Half the point of doing this with a bot is so you can get notified when it's done after
 	// you inevitably step away from your machine.
-	attachment.Text = fmt.Sprintf("Checking out host for <@%s>…", conv.User())
-	attachment.Fields = []slack.AttachmentField{
-		{
-			Title: "Host",
-			Value: fmt.Sprintf(":desktop_computer: %s", host.Name()),
-		},
-	}
-	conv.ReplyWithOptions(slack.MsgOptionUpdate(timestamp), slack.MsgOptionAttachments(attachment))
+	msg.AttachText("Checking out host for <@%s>…", conv.User()).
+		Field("Host", ":desktop_computer: %s", host.Name()).
+		Send()
 
 	err = backend.CheckOutHost(ctx, host)
 	if err != nil {
-		conv.ReplyWithError("I couldn't check out the host.", err)
+		ReplyTo(conv).ErrorText("I couldn't check out the host.").Error(err).Send()
 		return
 	}
 
-	attachment.Text = fmt.Sprintf("Successfully checked out host for <@%s>!", conv.User())
-	attachment.Color = "good"
-	conv.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
+	ReplyTo(conv).
+		Text("Successfully checked out host for <@%s>!", conv.User()).
+		Field("Host", ":desktop_computer: %s", host.Name()).
+		Color("good").Send()
 }
 
 // CheckInHost moves a host from the dev cluster to the production cluster.
@@ -89,40 +82,33 @@ func CheckOutHost(ctx context.Context, conv Conversation) {
 func CheckInHost(ctx context.Context, conv Conversation) {
 	isCheckedOut, err := backend.IsHostCheckedOut(ctx)
 	if err != nil {
-		conv.ReplyWithError("I couldn't determine if a host is currently checked out.", err)
+		ReplyTo(conv).ErrorText("I couldn't determine if a host is currently checked out.").Error(err).Send()
 		return
 	}
 
 	if !isCheckedOut {
-		conv.ReplyWithError("Looks like there isn't a host checked out right now!", nil)
+		ReplyTo(conv).ErrorText("Looks like there isn't a host checked out right now!").Send()
 		return
 	}
 
 	canCheckOut := hostSemaphore.TryAcquire(1)
 	if !canCheckOut {
-		conv.ReplyWithError("Someone is already trying to check in/out a host right now, try again later!", nil)
+		ReplyTo(conv).ErrorText("Someone is already trying to check in/out a host right now, try again later!").Send()
 		return
 	}
 	defer hostSemaphore.Release(1)
 
-	attachment := slack.Attachment{
-		Text: "Checking the host in for <@" + conv.User() + ">…",
-	}
-	conv.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
+	ReplyTo(conv).AttachText("Checking the host in for <@%s>…", conv.User()).Send()
 
 	host, err := backend.CheckInHost(ctx)
 	if err != nil {
-		conv.ReplyWithError("I couldn't check the host back in.", err)
+		ReplyTo(conv).ErrorText("I couldn't check the host back in.").Error(err).Send()
 		return
 	}
 
-	attachment.Text = fmt.Sprintf("Successfully checked in host for <@%s>!", conv.User())
-	attachment.Color = "good"
-	attachment.Fields = []slack.AttachmentField{
-		{
-			Title: "Host",
-			Value: fmt.Sprintf(":desktop_computer: %s", host.Name()),
-		},
-	}
-	conv.ReplyWithOptions(slack.MsgOptionAttachments(attachment))
+	ReplyTo(conv).
+		AttachText("Successfully checked in host for <@%s>!", conv.User()).
+		Color("good").
+		Field("Host", ":desktop_computer: %s", host.Name()).
+		Send()
 }

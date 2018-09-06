@@ -19,7 +19,7 @@ func TestIsHostCheckedOut(t *testing.T) {
 	IsHostCheckedOut(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	if !strings.HasSuffix(reply, "There is no host checked out for building images.") {
+	if !strings.HasSuffix(reply.text, "There is no host checked out for building images.") {
 		t.Fatal("unexpected reply, got", reply)
 	}
 
@@ -31,7 +31,7 @@ func TestIsHostCheckedOut(t *testing.T) {
 	IsHostCheckedOut(context.TODO(), conv)
 
 	reply = conv.replies[0]
-	if !strings.HasSuffix(reply, "There is a host currently checked out for building images.") {
+	if !strings.HasSuffix(reply.text, "There is a host currently checked out for building images.") {
 		t.Fatal("unexpected reply, got", reply)
 	}
 }

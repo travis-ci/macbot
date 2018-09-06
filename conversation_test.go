@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"github.com/nlopes/slack"
+	"strconv"
 )
 
 type testConversation struct {
-	channel string
-	user    string
-	command string
-	replies []string
+	channel   string
+	user      string
+	command   string
+	replies   []MessageBuilder
+	timestamp int
 }
 
 func newTestConversation(command string) *testConversation {
@@ -37,17 +37,9 @@ func (c *testConversation) IsDirectMessage() bool {
 	return true
 }
 
-func (c *testConversation) Reply(text string, args ...interface{}) {
-	msg := fmt.Sprintf(text, args...)
-	c.replies = append(c.replies, msg)
-}
-
-func (c *testConversation) ReplyWithError(text string, err error) {
-	// TODO: include err information
-	c.replies = append(c.replies, text)
-}
-
-func (c *testConversation) ReplyWithOptions(options ...slack.MsgOption) string {
-	// TODO: implement this or change the interface to something easier to reason about
-	return ""
+func (c *testConversation) Send(b *MessageBuilder) string {
+	c.timestamp++
+	timestamp := strconv.Itoa(c.timestamp)
+	c.replies = append(c.replies, *b)
+	return timestamp
 }
