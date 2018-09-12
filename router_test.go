@@ -24,7 +24,8 @@ func TestRouterSingleUnknownCommand(t *testing.T) {
 	router.Reply(context.TODO(), conv)
 
 	reply := conv.replies[0]
-	require.Equal(t, "Sorry, <@user>! I don't know how to answer that.", reply.text)
+	expected := "Sorry, <@user>! I don't know how to answer that. I can respond to the following commands:\n\n• `other command`\n"
+	require.Equal(t, expected, reply.text)
 }
 
 func TestRouterSingleMatchingCommand(t *testing.T) {
@@ -63,4 +64,19 @@ func TestRouterIrrelevantMessage(t *testing.T) {
 	router.Reply(context.TODO(), conv)
 
 	require.Empty(t, conv.replies)
+}
+
+func TestRouterHelp(t *testing.T) {
+	router := NewRouter()
+	dummy := func(_ context.Context, conv Conversation) {}
+	router.HandleFunc("command 1", dummy)
+	router.HandleFunc("command 2", dummy)
+	router.HandleFunc("command 3", dummy)
+
+	conv := newTestConversation("help")
+	router.Reply(context.TODO(), conv)
+
+	reply := conv.replies[0]
+	expected := "<@user>: \n• `command 1`\n• `command 2`\n• `command 3`\n"
+	require.Equal(t, expected, reply.text)
 }
