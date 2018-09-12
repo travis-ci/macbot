@@ -38,6 +38,8 @@ func main() {
 	go rtm.ManageConnection()
 
 	router := NewRouter()
+	router.HandleFunc("base images", BaseImages)
+	router.HandleFunc("base vms", BaseImages)
 	router.HandleFunc("checked out", IsHostCheckedOut)
 	router.HandleFunc("is checked out", IsHostCheckedOut)
 	router.HandleFunc("checkout host", CheckOutHost)
@@ -110,5 +112,6 @@ func setupVSphereBackend() {
 		Insecure:        true,
 		ProdClusterPath: "/pod-1/host/MacPro_Pod_1",
 		DevClusterPath:  "/pod-1/host/packer_image_dev",
+		BaseImagePath:   "/pod-1/vm/Base VMs",
 	}
 }

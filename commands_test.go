@@ -101,3 +101,13 @@ func TestCheckInHostAlreadyIn(t *testing.T) {
 	reply := conv.replies[0]
 	require.Equal(t, "Sorry, <@user>! Looks like there isn't a host checked out right now!", reply.text)
 }
+
+func TestBaseImages(t *testing.T) {
+	resetBackend()
+
+	conv := newTestConversation("base images")
+	BaseImages(context.TODO(), conv)
+
+	reply := conv.replies[0]
+	require.Equal(t, "<@user>: \n• `debug-base-image-1`\n• `debug-base-image-2`\n• `debug-base-image-3`", reply.text)
+}

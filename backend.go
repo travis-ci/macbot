@@ -14,6 +14,12 @@ type Host interface {
 	Name() string
 }
 
+// Image represents a virtual machine image in the datacenter
+type Image interface {
+	// Name returns the name of the VM, for display in chat messages.
+	Name() string
+}
+
 // Backend is a common interface for operations the bot would perform against vSphere.
 //
 // The Backend interface simplifies the chat command logic and allows us to substitute in
@@ -23,6 +29,8 @@ type Backend interface {
 	SelectHost(context.Context) (Host, error)
 	CheckOutHost(context.Context, Host) error
 	CheckInHost(context.Context) (Host, error)
+
+	BaseImages(context.Context) ([]Image, error)
 }
 
 // VSphereBackend is the default backend, which communicates with a vSphere instance.
@@ -31,6 +39,7 @@ type VSphereBackend struct {
 	Insecure        bool
 	ProdClusterPath string
 	DevClusterPath  string
+	BaseImagePath   string
 }
 
 func (b *VSphereBackend) IsHostCheckedOut(ctx context.Context) (bool, error) {
@@ -49,10 +58,29 @@ func (b *VSphereBackend) CheckInHost(ctx context.Context) (Host, error) {
 	return vsphereimages.CheckInHost(ctx, b.URL, b.Insecure, b.DevClusterPath, b.ProdClusterPath, newProgressLogger())
 }
 
+func (b *VSphereBackend) BaseImages(ctx context.Context) ([]Image, error) {
+	vms, err := vsphereimages.ListImages(ctx, b.URL, b.Insecure, b.BaseImagePath)
+	if err != nil {
+		return nil, err
+	}
+
+	images := make([]Image, len(vms))
+	for i, vm := range vms {
+		images[i] = vm
+	}
+
+	return images, nil
+}
+
 // DebugHost is a host in the debug backend.
 //
 // It is just a wrapper around a string, so that it can implement the Host interface.
 type DebugHost string
+
+// DebugImage is a virtual machine image in the debug backend.
+//
+// It is just a wrapper around a string, so that it can implement the Image interface.
+type DebugImage string
 
 // DebugBackend is a fake backend that can be used to test the Slack bot without interacting
 // with real hosts.
@@ -95,6 +123,18 @@ func (b *DebugBackend) CheckInHost(ctx context.Context) (Host, error) {
 	return b.Host, nil
 }
 
+func (b *DebugBackend) BaseImages(ctx context.Context) ([]Image, error) {
+	return []Image{
+		DebugImage("debug-base-image-1"),
+		DebugImage("debug-base-image-2"),
+		DebugImage("debug-base-image-3"),
+	}, nil
+}
+
 func (h DebugHost) Name() string {
 	return string(h)
+}
+
+func (i DebugImage) Name() string {
+	return string(i)
 }

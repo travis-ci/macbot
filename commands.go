@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"golang.org/x/sync/semaphore"
+	"strings"
 )
 
 var hostSemaphore = semaphore.NewWeighted(1)
@@ -111,4 +113,20 @@ func CheckInHost(ctx context.Context, conv Conversation) {
 		Color("good").
 		Field("Host", ":desktop_computer: %s", host.Name()).
 		Send()
+}
+
+// BaseImages lists the names of the base VM images that are in the datacenter.
+func BaseImages(ctx context.Context, conv Conversation) {
+	images, err := backend.BaseImages(ctx)
+	if err != nil {
+		ReplyTo(conv).ErrorText("I couldn't get the list of base images.").Error(err).Send()
+		return
+	}
+
+	var b strings.Builder
+	for _, image := range images {
+		fmt.Fprintf(&b, "\n• `%s`", image.Name())
+	}
+
+	ReplyTo(conv).Text(b.String()).Send()
 }
