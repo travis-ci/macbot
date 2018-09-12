@@ -102,16 +102,29 @@ func setupDebugBackend() {
 }
 
 func setupVSphereBackend() {
-	vSphereURL, err := url.Parse(os.Getenv("VSPHERE_URL"))
+	pod1URL, err := url.Parse(os.Getenv("VSPHERE_POD1_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pod2URL, err := url.Parse(os.Getenv("VSPHERE_POD2_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	backend = &VSphereBackend{
-		URL:             vSphereURL,
-		Insecure:        true,
-		ProdClusterPath: "/pod-1/host/MacPro_Pod_1",
-		DevClusterPath:  "/pod-1/host/packer_image_dev",
-		BaseImagePath:   "/pod-1/vm/Base VMs",
+		Pod1: DatacenterConfig{
+			URL:             pod1URL,
+			Insecure:        true,
+			ProdClusterPath: "/pod-1/host/MacPro_Pod_1",
+			DevClusterPath:  "/pod-1/host/packer_image_dev",
+			BaseImagePath:   "/pod-1/vm/Base VMs",
+		},
+		Pod2: DatacenterConfig{
+			URL:             pod2URL,
+			Insecure:        true,
+			ProdClusterPath: "/pod-2/host/MacPro_Pod_2",
+			BaseImagePath:   "/pod-2/vm/Base VMs",
+		},
 	}
 }

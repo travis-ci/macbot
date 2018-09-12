@@ -35,6 +35,12 @@ type Backend interface {
 
 // VSphereBackend is the default backend, which communicates with a vSphere instance.
 type VSphereBackend struct {
+	Pod1 DatacenterConfig
+	Pod2 DatacenterConfig
+}
+
+// DatacenterConfig defines how to interact with one of our vSphere datacenters
+type DatacenterConfig struct {
 	URL             *url.URL
 	Insecure        bool
 	ProdClusterPath string
@@ -43,23 +49,23 @@ type VSphereBackend struct {
 }
 
 func (b *VSphereBackend) IsHostCheckedOut(ctx context.Context) (bool, error) {
-	return vsphereimages.IsHostCheckedOut(ctx, b.URL, b.Insecure, b.DevClusterPath)
+	return vsphereimages.IsHostCheckedOut(ctx, b.Pod1.URL, b.Pod1.Insecure, b.Pod1.DevClusterPath)
 }
 
 func (b *VSphereBackend) SelectHost(ctx context.Context) (Host, error) {
-	return vsphereimages.SelectAvailableHost(ctx, b.URL, b.Insecure, b.ProdClusterPath)
+	return vsphereimages.SelectAvailableHost(ctx, b.Pod1.URL, b.Pod1.Insecure, b.Pod1.ProdClusterPath)
 }
 
 func (b *VSphereBackend) CheckOutHost(ctx context.Context, h Host) error {
-	return vsphereimages.CheckOutSelectedHost(ctx, b.URL, b.Insecure, h.(*object.HostSystem), b.DevClusterPath, newProgressLogger())
+	return vsphereimages.CheckOutSelectedHost(ctx, b.Pod1.URL, b.Pod1.Insecure, h.(*object.HostSystem), b.Pod1.DevClusterPath, newProgressLogger())
 }
 
 func (b *VSphereBackend) CheckInHost(ctx context.Context) (Host, error) {
-	return vsphereimages.CheckInHost(ctx, b.URL, b.Insecure, b.DevClusterPath, b.ProdClusterPath, newProgressLogger())
+	return vsphereimages.CheckInHost(ctx, b.Pod1.URL, b.Pod1.Insecure, b.Pod1.DevClusterPath, b.Pod1.ProdClusterPath, newProgressLogger())
 }
 
 func (b *VSphereBackend) BaseImages(ctx context.Context) ([]Image, error) {
-	vms, err := vsphereimages.ListImages(ctx, b.URL, b.Insecure, b.BaseImagePath)
+	vms, err := vsphereimages.ListImages(ctx, b.Pod1.URL, b.Pod1.Insecure, b.Pod1.BaseImagePath)
 	if err != nil {
 		return nil, err
 	}
