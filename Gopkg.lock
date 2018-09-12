@@ -42,6 +42,22 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:c6795766b23d66ac11871034c9f00a4e4d292284e935debc2db2bfe25b96304f"
+  name = "github.com/shomali11/commander"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "384535f6562b1b98294d1e6db8d1d5365b79915c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8664d72d77f415e581e40a85f936e204766464f4c2314f7db58f96d62841798d"
+  name = "github.com/shomali11/proper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "233a9a872c306ae145fed0a7d71afc128ad78394"
+
+[[projects]]
   digest = "1:c40d65817cdd41fac9aa7af8bed56927bb2d6d47e4fea566a74880f5c2b1c41e"
   name = "github.com/stretchr/testify"
   packages = [
@@ -106,6 +122,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/nlopes/slack",
+    "github.com/shomali11/commander",
     "github.com/stretchr/testify/require",
     "github.com/travis-ci/vsphere-images",
     "github.com/vmware/govmomi/object",

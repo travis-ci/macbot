@@ -3,13 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/shomali11/commander"
 	"strings"
 )
 
 // Router dispatches conversations to handler functions.
 type Router struct {
-	handlers map[string]HandlerFunc
-	commands []string
+	commands []command
+}
+
+type command struct {
+	*commander.Command
+
+	pattern string
+	handler HandlerFunc
 }
 
 // HandlerFunc is a function that can reply to a conversation.
@@ -17,15 +24,17 @@ type HandlerFunc func(context.Context, Conversation)
 
 // NewRouter creates a new router with no handlers registered.
 func NewRouter() *Router {
-	return &Router{
-		handlers: make(map[string]HandlerFunc),
-	}
+	return &Router{}
 }
 
 // HandleFunc registers a function as a handler for a command.
-func (r *Router) HandleFunc(command string, fn HandlerFunc) {
-	r.commands = append(r.commands, command)
-	r.handlers[command] = fn
+func (r *Router) HandleFunc(pattern string, fn HandlerFunc) {
+	cmd := commander.NewCommand(pattern)
+	r.commands = append(r.commands, command{
+		Command: cmd,
+		pattern: pattern,
+		handler: fn,
+	})
 }
 
 // Reply sends a conversation to a registered handler if one matches.
@@ -37,9 +46,14 @@ func (r *Router) Reply(ctx context.Context, conv Conversation) {
 		return
 	}
 
-	if fn, ok := r.handlers[text]; ok {
-		fn(ctx, conv)
-	} else if text == "help" {
+	for _, c := range r.commands {
+		if _, ok := c.Match(text); ok {
+			c.handler(ctx, conv)
+			return
+		}
+	}
+
+	if text == "help" {
 		r.help(ctx, conv)
 	} else {
 		r.unknownCommand(ctx, conv)
@@ -50,7 +64,7 @@ func (r *Router) unknownCommand(ctx context.Context, conv Conversation) {
 	var b strings.Builder
 	b.WriteString("I don't know how to answer that.")
 
-	if len(r.handlers) > 0 {
+	if len(r.commands) > 0 {
 		b.WriteString(" I can respond to the following commands:\n\n")
 		b.WriteString(r.commandList())
 	}
@@ -66,7 +80,7 @@ func (r *Router) commandList() string {
 	var b strings.Builder
 
 	for _, cmd := range r.commands {
-		fmt.Fprintf(&b, "• `%s`\n", cmd)
+		fmt.Fprintf(&b, "• `%s`\n", cmd.pattern)
 	}
 
 	return b.String()
