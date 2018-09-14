@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/shomali11/proper"
 	"strconv"
 	"strings"
 )
@@ -11,6 +12,8 @@ type testConversation struct {
 	command   string
 	replies   []MessageBuilder
 	timestamp int
+
+	*proper.Properties
 }
 
 func newTestConversation(command string) *testConversation {
@@ -43,4 +46,12 @@ func (c *testConversation) Send(b *MessageBuilder) string {
 	timestamp := strconv.Itoa(c.timestamp)
 	c.replies = append(c.replies, *b)
 	return timestamp
+}
+
+func (c *testConversation) SetProperties(props *proper.Properties) {
+	c.Properties = props
+}
+
+func (c *testConversation) String(key string) string {
+	return c.StringParam(key, "")
 }

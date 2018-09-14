@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/nlopes/slack"
+	"github.com/shomali11/proper"
 	"strings"
 )
 
@@ -13,10 +14,14 @@ type Conversation interface {
 	CommandText() string
 	IsDirectMessage() bool
 	Send(*MessageBuilder) string
+
+	SetProperties(*proper.Properties)
+	String(string) string
 }
 
 type slackConversation struct {
 	Event *slack.MessageEvent
+	*proper.Properties
 }
 
 // NewConversation creates a conversation from an incoming Slack message.
@@ -110,4 +115,12 @@ func messageOptions(b *MessageBuilder) []slack.MsgOption {
 	}
 
 	return options
+}
+
+func (c *slackConversation) SetProperties(props *proper.Properties) {
+	c.Properties = props
+}
+
+func (c *slackConversation) String(key string) string {
+	return c.StringParam(key, "")
 }

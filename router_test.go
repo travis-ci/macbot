@@ -80,3 +80,16 @@ func TestRouterHelp(t *testing.T) {
 	expected := "<@user>: \n• `command 1`\n• `command 2`\n• `command 3`\n"
 	require.Equal(t, expected, reply.text)
 }
+
+func TestRouterCommandParameters(t *testing.T) {
+	router := NewRouter()
+	router.HandleFunc("test command <foo> to <bar>", func(_ context.Context, conv Conversation) {
+		ReplyTo(conv).Text("test command matched '%s' '%s'", conv.String("foo"), conv.String("bar")).Send()
+	})
+
+	conv := newTestConversation("test command a b c to d e f")
+	router.Reply(context.TODO(), conv)
+
+	reply := conv.replies[0]
+	require.Equal(t, "<@user>: test command matched 'a b c' 'd e f'", reply.text)
+}

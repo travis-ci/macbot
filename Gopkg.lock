@@ -123,6 +123,7 @@
   input-imports = [
     "github.com/nlopes/slack",
     "github.com/shomali11/commander",
+    "github.com/shomali11/proper",
     "github.com/stretchr/testify/require",
     "github.com/travis-ci/vsphere-images",
     "github.com/vmware/govmomi/object",

@@ -47,7 +47,8 @@ func (r *Router) Reply(ctx context.Context, conv Conversation) {
 	}
 
 	for _, c := range r.commands {
-		if _, ok := c.Match(text); ok {
+		if props, ok := c.Match(text); ok {
+			conv.SetProperties(props)
 			c.handler(ctx, conv)
 			return
 		}
