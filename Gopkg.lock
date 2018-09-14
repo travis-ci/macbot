@@ -70,11 +70,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d49aac00b4cfe86c7a59a1e4137b5c08b8880f15ffa3ca519160e38a3209a0a5"
+  digest = "1:8e65251433f1068950161a465c957e61ddc2ad8ad21fe58fc1ddf74279e63874"
   name = "github.com/travis-ci/vsphere-images"
   packages = ["."]
   pruneopts = "UT"
-  revision = "762e748be658725b451b68238d4ecf12e0cc3b3f"
+  revision = "ec4c6eabce8de0c7cec326ecc015fc0ae8561efb"
 
 [[projects]]
   branch = "master"

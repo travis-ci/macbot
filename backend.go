@@ -48,6 +48,7 @@ type DatacenterConfig struct {
 	DevClusterPath  string
 	BaseImagePath   string
 	BackupImagePath string
+	DatastorePath   string
 }
 
 func (b *VSphereBackend) IsHostCheckedOut(ctx context.Context) (bool, error) {
@@ -81,7 +82,8 @@ func (b *VSphereBackend) BaseImages(ctx context.Context) ([]Image, error) {
 }
 
 func (b *VSphereBackend) RestoreBackup(ctx context.Context, image string) error {
-	return nil
+	image = b.Pod2.BackupImagePath + "/" + image
+	return vsphereimages.RestoreBackup(ctx, b.Pod2.URL, b.Pod2.Insecure, image, b.Pod2.BaseImagePath, b.Pod2.DatastorePath, b.Pod2.ProdClusterPath, newProgressLogger())
 }
 
 // DebugHost is a host in the debug backend.

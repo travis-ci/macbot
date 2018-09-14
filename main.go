@@ -127,6 +127,7 @@ func setupVSphereBackend() {
 			ProdClusterPath: "/pod-2/host/MacPro_Pod_2",
 			BaseImagePath:   "/pod-2/vm/Base VMs",
 			BackupImagePath: "/pod-2/vm/VM Backups",
+			DatastorePath:   "/pod-2/datastore/DataCore1_4",
 		},
 	}
 }
