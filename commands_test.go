@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/shomali11/proper"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -110,4 +111,29 @@ func TestBaseImages(t *testing.T) {
 
 	reply := conv.replies[0]
 	require.Equal(t, "<@user>: \n• `debug-base-image-1`\n• `debug-base-image-2`\n• `debug-base-image-3`", reply.text)
+}
+
+func TestRestoreBackup(t *testing.T) {
+	resetBackend()
+
+	conv := newTestConversation("restore backup debug-base-image-2")
+	props := proper.NewProperties(map[string]string{
+		"image": "debug-base-image-2",
+	})
+	conv.SetProperties(props)
+
+	RestoreBackup(context.TODO(), conv)
+
+	require.Len(t, conv.replies, 2)
+
+	reply := conv.replies[0]
+	require.Equal(t, "Restoring backup for <@user>…", reply.text)
+	require.True(t, reply.isAttachment)
+	f := messageField{"Image", "debug-base-image-2"}
+	require.Equal(t, f, reply.fields[0])
+
+	reply = conv.replies[1]
+	require.Equal(t, "Successfully restored backup for <@user>!", reply.text)
+	require.Equal(t, f, reply.fields[0])
+	require.Equal(t, "good", reply.color)
 }

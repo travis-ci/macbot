@@ -40,6 +40,7 @@ func main() {
 	router := NewRouter()
 	router.HandleFunc("base images", BaseImages)
 	router.HandleFunc("base vms", BaseImages)
+	router.HandleFunc("restore backup <image>", RestoreBackup)
 	router.HandleFunc("checked out", IsHostCheckedOut)
 	router.HandleFunc("is checked out", IsHostCheckedOut)
 	router.HandleFunc("checkout host", CheckOutHost)
@@ -125,6 +126,7 @@ func setupVSphereBackend() {
 			Insecure:        true,
 			ProdClusterPath: "/pod-2/host/MacPro_Pod_2",
 			BaseImagePath:   "/pod-2/vm/Base VMs",
+			BackupImagePath: "/pod-2/vm/VM Backups",
 		},
 	}
 }

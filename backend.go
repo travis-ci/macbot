@@ -31,6 +31,7 @@ type Backend interface {
 	CheckInHost(context.Context) (Host, error)
 
 	BaseImages(context.Context) ([]Image, error)
+	RestoreBackup(context.Context, string) error
 }
 
 // VSphereBackend is the default backend, which communicates with a vSphere instance.
@@ -46,6 +47,7 @@ type DatacenterConfig struct {
 	ProdClusterPath string
 	DevClusterPath  string
 	BaseImagePath   string
+	BackupImagePath string
 }
 
 func (b *VSphereBackend) IsHostCheckedOut(ctx context.Context) (bool, error) {
@@ -76,6 +78,10 @@ func (b *VSphereBackend) BaseImages(ctx context.Context) ([]Image, error) {
 	}
 
 	return images, nil
+}
+
+func (b *VSphereBackend) RestoreBackup(ctx context.Context, image string) error {
+	return nil
 }
 
 // DebugHost is a host in the debug backend.
@@ -135,6 +141,13 @@ func (b *DebugBackend) BaseImages(ctx context.Context) ([]Image, error) {
 		DebugImage("debug-base-image-2"),
 		DebugImage("debug-base-image-3"),
 	}, nil
+}
+
+func (b *DebugBackend) RestoreBackup(ctx context.Context, image string) error {
+	if !b.disableSleep {
+		time.Sleep(10 * time.Second)
+	}
+	return nil
 }
 
 func (h DebugHost) Name() string {

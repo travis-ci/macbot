@@ -130,3 +130,23 @@ func BaseImages(ctx context.Context, conv Conversation) {
 
 	ReplyTo(conv).Text(b.String()).Send()
 }
+
+// RestoreBackup copies a backup image into the place of a production base image.
+func RestoreBackup(ctx context.Context, conv Conversation) {
+	image := conv.String("image")
+	ReplyTo(conv).
+		AttachText("Restoring backup for <@%s>…", conv.User()).
+		Field("Image", image).
+		Send()
+
+	if err := backend.RestoreBackup(ctx, image); err != nil {
+		ReplyTo(conv).ErrorText("I couldn't restore that backup.").Error(err).Send()
+		return
+	}
+
+	ReplyTo(conv).
+		AttachText("Successfully restored backup for <@%s>!", conv.User()).
+		Color("good").
+		Field("Image", image).
+		Send()
+}
