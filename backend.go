@@ -139,9 +139,9 @@ func (b *DebugBackend) CheckInHost(ctx context.Context) (Host, error) {
 
 func (b *DebugBackend) BaseImages(ctx context.Context) ([]Image, error) {
 	return []Image{
+		DebugImage("debug-base-image-3"),
 		DebugImage("debug-base-image-1"),
 		DebugImage("debug-base-image-2"),
-		DebugImage("debug-base-image-3"),
 	}, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"golang.org/x/sync/semaphore"
+	"sort"
 	"strings"
 )
 
@@ -123,6 +124,8 @@ func BaseImages(ctx context.Context, conv Conversation) {
 		return
 	}
 
+	sort.Sort(ByTimestamp(images))
+
 	var b strings.Builder
 	for _, image := range images {
 		fmt.Fprintf(&b, "\n• `%s`", image.Name())
@@ -149,4 +152,26 @@ func RestoreBackup(ctx context.Context, conv Conversation) {
 		Color("good").
 		Field("Image", image).
 		Send()
+}
+
+// ByTimestamp wraps a slice of Images and defines them to be sorted by the timestamp
+// in their names.
+type ByTimestamp []Image
+
+func (a ByTimestamp) Len() int {
+	return len(a)
+}
+
+func (a ByTimestamp) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (a ByTimestamp) Less(i, j int) bool {
+	return extractTimestamp(a[i]) < extractTimestamp(a[j])
+}
+
+func extractTimestamp(i Image) string {
+	name := i.Name()
+	lastDash := strings.LastIndex(name, "-")
+	return name[lastDash+1 : len(name)]
 }
