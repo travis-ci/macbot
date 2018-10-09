@@ -10,6 +10,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
+  name = "github.com/dustin/go-humanize"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9f541cc9db5d55bce703bd99987c9d5cb8eea45e"
+
+[[projects]]
   digest = "1:69148993c8baff35dbb0b5ec92eccb6b75b2b7255a4ad1257be38f51fff8f267"
   name = "github.com/golang/protobuf"
   packages = [
@@ -153,6 +161,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/dustin/go-humanize",
     "github.com/nlopes/slack",
     "github.com/shomali11/commander",
     "github.com/shomali11/proper",

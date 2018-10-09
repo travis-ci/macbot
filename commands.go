@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"github.com/travis-ci/imaged/rpc/images"
 	"golang.org/x/sync/semaphore"
 	"log"
@@ -168,7 +169,14 @@ func LastImageBuild(ctx context.Context, conv Conversation) {
 		return
 	}
 
-	msg := ReplyTo(conv).AttachText("The %s image was last built some time ago.", resp.Build.Name)
+	msg := ReplyTo(conv)
+	finished := resp.Build.FinishedAt
+	if finished == 0 {
+		msg.AttachText("An %s image is currently building.", resp.Build.Name)
+	} else {
+		t := time.Unix(finished, 0)
+		msg.AttachText("The %s image was last built %s.", resp.Build.Name, humanize.Time(t))
+	}
 	updateMessage(msg, resp.Build)
 	msg.Send()
 }
@@ -189,7 +197,7 @@ func BuildImage(ctx context.Context, conv Conversation) {
 	build := resp.Build
 
 	msg := ReplyTo(conv).
-		AttachText("Building image from %s template for <@%s>", build.Name, conv.User())
+		AttachText("Building %s image for <@%s>…", build.Name, conv.User())
 	updateMessage(msg, build)
 	msg.Send()
 
