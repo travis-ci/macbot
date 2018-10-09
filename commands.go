@@ -172,10 +172,12 @@ func LastImageBuild(ctx context.Context, conv Conversation) {
 	msg := ReplyTo(conv)
 	finished := resp.Build.FinishedAt
 	if finished == 0 {
-		msg.AttachText("An %s image is currently building.", resp.Build.Name)
+		msg.AttachText("An %s image is currently building.", resp.Build.Name).
+			Footer("imaged", time.Unix(resp.Build.CreatedAt, 0))
 	} else {
 		t := time.Unix(finished, 0)
-		msg.AttachText("The %s image was last built %s.", resp.Build.Name, humanize.Time(t))
+		msg.AttachText("The %s image was last built %s.", resp.Build.Name, humanize.Time(t)).
+			Footer("imaged", t)
 	}
 	updateMessage(msg, resp.Build)
 	msg.Send()
@@ -234,12 +236,36 @@ func buildFinished(b *images.Build) bool {
 	return b.Status == images.Build_SUCCEEDED || b.Status == images.Build_FAILED
 }
 
+func buildStatus(s images.Build_Status) string {
+	switch s {
+	case images.Build_CREATED:
+		return "Waiting to start"
+	case images.Build_STARTED:
+		return "Building"
+	case images.Build_SUCCEEDED:
+		return "Succeeded"
+	case images.Build_FAILED:
+		return "Failed"
+	default:
+		return "Unknown"
+	}
+}
+
 func updateMessage(msg *MessageBuilder, b *images.Build) {
+	revision := b.FullRevision
+	if len(revision) > 7 {
+		revision = revision[0:7]
+	}
+
 	msg.
 		ClearFields().
-		Field("Build ID", strconv.FormatInt(b.Id, 10)).
-		Field("Branch", b.Revision).
-		Field("Revision", b.FullRevision)
+		ShortField("Build ID", strconv.FormatInt(b.Id, 10)).
+		ShortField("Status", buildStatus(b.Status)).
+		ShortField("Branch", b.Revision)
+
+	if revision != "" {
+		msg.ShortField("Revision", revision)
+	}
 
 	switch b.Status {
 	case images.Build_SUCCEEDED:

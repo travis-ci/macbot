@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/nlopes/slack"
 	"github.com/shomali11/proper"
+	"strconv"
 	"strings"
 )
 
@@ -102,7 +104,12 @@ func messageOptions(b *MessageBuilder) []slack.MsgOption {
 				attachment.Fields = append(attachment.Fields, slack.AttachmentField{
 					Title: field.title,
 					Value: field.value,
+					Short: field.short,
 				})
+			}
+			if b.footer != nil {
+				attachment.Footer = b.footer.text
+				attachment.Ts = json.Number(strconv.FormatInt(b.footer.time.Unix(), 10))
 			}
 			options = append(options, slack.MsgOptionAttachments(attachment))
 		} else {

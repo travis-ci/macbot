@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // MessageBuilder provides a fluent interface for constructing messages to
@@ -15,11 +16,18 @@ type MessageBuilder struct {
 	color        string
 	fields       []messageField
 	timestamp    string
+	footer       *messageFooter
 }
 
 type messageField struct {
 	title string
 	value string
+	short bool
+}
+
+type messageFooter struct {
+	text string
+	time time.Time
 }
 
 // ReplyTo creates a MessageBuilder for a conversation, starting with an
@@ -79,18 +87,43 @@ func (b *MessageBuilder) Color(c string) *MessageBuilder {
 }
 
 // Field adds a field to the attachment for the message.
+//
 // This forces the message to be sent as an attachment.
 func (b *MessageBuilder) Field(title string, text string, args ...interface{}) *MessageBuilder {
+	b.addField(false, title, text, args...)
+	return b
+}
+
+// ShortField adds a short field to the attachment for the message.
+//
+// ShortFields can be shown side-by-side with another short field.
+//
+// This forces the message to be sent as an attachment.
+func (b *MessageBuilder) ShortField(title string, text string, args ...interface{}) *MessageBuilder {
+	b.addField(true, title, text, args...)
+	return b
+}
+
+func (b *MessageBuilder) addField(short bool, title string, text string, args ...interface{}) {
 	b.isAttachment = true
 	b.fields = append(b.fields, messageField{
 		title: title,
 		value: fmt.Sprintf(text, args...),
+		short: short,
 	})
-	return b
 }
 
 func (b *MessageBuilder) ClearFields() *MessageBuilder {
 	b.fields = nil
+	return b
+}
+
+// Footer adds a footer to the attachment of the message.
+func (b *MessageBuilder) Footer(text string, time time.Time) *MessageBuilder {
+	b.footer = &messageFooter{
+		text: text,
+		time: time,
+	}
 	return b
 }
 
