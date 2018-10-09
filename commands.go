@@ -251,6 +251,20 @@ func buildStatus(s images.Build_Status) string {
 	}
 }
 
+const templatesURL = "https://github.com/travis-ci/packer-templates-mac"
+
+func githubTreeURL(rev string) string {
+	return templatesURL + "/tree/" + rev
+}
+
+func githubTreeLink(rev, display string) string {
+	if display == "" {
+		display = rev
+	}
+
+	return "<" + githubTreeURL(rev) + "|" + display + ">"
+}
+
 func updateMessage(msg *MessageBuilder, b *images.Build) {
 	revision := b.FullRevision
 	if len(revision) > 7 {
@@ -261,10 +275,10 @@ func updateMessage(msg *MessageBuilder, b *images.Build) {
 		ClearFields().
 		ShortField("Build ID", strconv.FormatInt(b.Id, 10)).
 		ShortField("Status", buildStatus(b.Status)).
-		ShortField("Branch", b.Revision)
+		ShortField("Branch", githubTreeLink(b.Revision, ""))
 
 	if revision != "" {
-		msg.ShortField("Revision", revision)
+		msg.ShortField("Revision", githubTreeLink(b.FullRevision, revision))
 	}
 
 	switch b.Status {
