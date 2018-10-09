@@ -45,7 +45,7 @@ func TestCheckOutHost(t *testing.T) {
 
 	reply = conv.replies[1]
 	require.Equal(t, "Checking out host for <@user>…", reply.text)
-	f := messageField{"Host", ":desktop_computer: 1.2.3.4"}
+	f := messageField{title: "Host", value: ":desktop_computer: 1.2.3.4"}
 	require.Equal(t, f, reply.fields[0])
 	require.NotEmpty(t, reply.timestamp)
 
@@ -85,7 +85,7 @@ func TestCheckInHost(t *testing.T) {
 
 	reply = conv.replies[1]
 	require.Equal(t, "Successfully checked in host for <@user>!", reply.text)
-	f := messageField{"Host", ":desktop_computer: 1.2.3.4"}
+	f := messageField{title: "Host", value: ":desktop_computer: 1.2.3.4"}
 	require.Equal(t, f, reply.fields[0])
 	require.Equal(t, "good", reply.color)
 	require.Empty(t, reply.timestamp, "expected reply 1 to be its own message")
@@ -129,7 +129,7 @@ func TestRestoreBackup(t *testing.T) {
 	reply := conv.replies[0]
 	require.Equal(t, "Restoring backup for <@user>…", reply.text)
 	require.True(t, reply.isAttachment)
-	f := messageField{"Image", "debug-base-image-2"}
+	f := messageField{title: "Image", value: "debug-base-image-2"}
 	require.Equal(t, f, reply.fields[0])
 
 	reply = conv.replies[1]
