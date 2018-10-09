@@ -4,7 +4,9 @@ import (
 	"context"
 	"flag"
 	"github.com/nlopes/slack"
+	"github.com/travis-ci/imaged/rpc/images"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -12,6 +14,7 @@ import (
 )
 
 var backend Backend
+var imagesClient images.Images
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var debug = flag.Bool("debug", false, "use debugging backend, don't talk to vsphere")
@@ -27,6 +30,7 @@ func main() {
 	setupInterruptHandler()
 
 	setupBackend()
+	setupImagesClient()
 
 	token := os.Getenv("SLACK_API_TOKEN")
 	api := slack.New(token)
@@ -41,12 +45,17 @@ func main() {
 	router.HandleFunc("base images", BaseImages)
 	router.HandleFunc("base vms", BaseImages)
 	router.HandleFunc("restore backup <image>", RestoreBackup)
+
 	router.HandleFunc("checked out", IsHostCheckedOut)
 	router.HandleFunc("is checked out", IsHostCheckedOut)
 	router.HandleFunc("checkout host", CheckOutHost)
 	router.HandleFunc("check out host", CheckOutHost)
 	router.HandleFunc("checkin host", CheckInHost)
 	router.HandleFunc("check in host", CheckInHost)
+
+	router.HandleFunc("last build of <image>", LastImageBuild)
+	router.HandleFunc("last build for <image>", LastImageBuild)
+	router.HandleFunc("build image <image>", BuildImage)
 
 	for msg := range rtm.IncomingEvents {
 		ctx := context.Background()
@@ -130,4 +139,8 @@ func setupVSphereBackend() {
 			DatastorePath:   "/pod-2/datastore/DataCore1_4",
 		},
 	}
+}
+
+func setupImagesClient() {
+	imagesClient = images.NewImagesProtobufClient(os.Getenv("MACBOT_IMAGED_URL"), &http.Client{})
 }

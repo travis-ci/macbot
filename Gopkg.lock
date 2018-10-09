@@ -10,6 +10,18 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:69148993c8baff35dbb0b5ec92eccb6b75b2b7255a4ad1257be38f51fff8f267"
+  name = "github.com/golang/protobuf"
+  packages = [
+    "jsonpb",
+    "proto",
+    "ptypes/struct",
+  ]
+  pruneopts = "UT"
+  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
+  version = "v1.2.0"
+
+[[projects]]
   digest = "1:cee8e8ac80df6373e7daa11baf1f98c1b6f7242c49ccae7e1ec34a971dc408d9"
   name = "github.com/gorilla/websocket"
   packages = ["."]
@@ -70,11 +82,31 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:f3cb115de3207b4c8062bebc4219a550db2d55bda642c1928873d5eadd7c71b8"
+  name = "github.com/travis-ci/imaged"
+  packages = ["rpc/images"]
+  pruneopts = "UT"
+  revision = "b00de407dcc0e9c190942038ab65fd8a85b57be5"
+
+[[projects]]
+  branch = "master"
   digest = "1:8e65251433f1068950161a465c957e61ddc2ad8ad21fe58fc1ddf74279e63874"
   name = "github.com/travis-ci/vsphere-images"
   packages = ["."]
   pruneopts = "UT"
   revision = "ec4c6eabce8de0c7cec326ecc015fc0ae8561efb"
+
+[[projects]]
+  digest = "1:bc5f818bb50c42b55721ab0ea9af6c28cad7d9e31db43eaa78d2ca487c9897ac"
+  name = "github.com/twitchtv/twirp"
+  packages = [
+    ".",
+    "ctxsetters",
+    "internal/contextkeys",
+  ]
+  pruneopts = "UT"
+  revision = "d08b9415baf292b016ed9c55c37e66154c46c221"
+  version = "v5.5.0"
 
 [[projects]]
   branch = "master"
@@ -125,6 +157,7 @@
     "github.com/shomali11/commander",
     "github.com/shomali11/proper",
     "github.com/stretchr/testify/require",
+    "github.com/travis-ci/imaged/rpc/images",
     "github.com/travis-ci/vsphere-images",
     "github.com/vmware/govmomi/object",
     "github.com/vmware/govmomi/vim25/progress",

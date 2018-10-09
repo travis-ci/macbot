@@ -3,9 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/travis-ci/imaged/rpc/images"
 	"golang.org/x/sync/semaphore"
+	"log"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var hostSemaphore = semaphore.NewWeighted(1)
@@ -152,6 +156,91 @@ func RestoreBackup(ctx context.Context, conv Conversation) {
 		Color("good").
 		Field("Image", image).
 		Send()
+}
+
+// LastImageBuild shows information about the most recent build of an image template.
+func LastImageBuild(ctx context.Context, conv Conversation) {
+	image := conv.String("image")
+
+	resp, err := imagesClient.GetLastBuild(ctx, &images.GetLastBuildRequest{Name: image})
+	if err != nil {
+		ReplyTo(conv).ErrorText("I couldn't load build info.").Error(err).Send()
+		return
+	}
+
+	msg := ReplyTo(conv).AttachText("The %s image was last built some time ago.", resp.Build.Name)
+	updateMessage(msg, resp.Build)
+	msg.Send()
+}
+
+// BuildImage starts a new image build and watches as it changes.
+func BuildImage(ctx context.Context, conv Conversation) {
+	image := conv.String("image")
+
+	resp, err := imagesClient.StartBuild(ctx, &images.StartBuildRequest{
+		Name:     image,
+		Revision: "master",
+	})
+	if err != nil {
+		ReplyTo(conv).ErrorText("I couldn't start the build.").Error(err).Send()
+		return
+	}
+
+	build := resp.Build
+
+	msg := ReplyTo(conv).
+		AttachText("Building image from %s template for <@%s>", build.Name, conv.User())
+	updateMessage(msg, build)
+	msg.Send()
+
+	// Check on the build every few seconds and update the Slack message
+	for {
+		r, err := imagesClient.GetBuild(ctx, &images.GetBuildRequest{Id: build.Id})
+		if err != nil {
+			log.Printf("failed to get build info while watching build: %v", err)
+		} else {
+			build = r.Build
+			if buildFinished(build) {
+				break
+			}
+
+			updateMessage(msg, build)
+			msg.Send()
+		}
+
+		time.Sleep(5 * time.Second)
+	}
+
+	// Send new message when build completes to trigger a notification
+	msg = ReplyTo(conv)
+	if build.Status == images.Build_SUCCEEDED {
+		msg.AttachText("Successfully built %s image for <@%s>", build.Name, conv.User())
+	} else {
+		msg.AttachText("Failed to build %s image for <@%s>", build.Name, conv.User())
+	}
+	updateMessage(msg, build)
+	msg.Send()
+}
+
+func buildFinished(b *images.Build) bool {
+	return b.Status == images.Build_SUCCEEDED || b.Status == images.Build_FAILED
+}
+
+func updateMessage(msg *MessageBuilder, b *images.Build) {
+	msg.
+		ClearFields().
+		Field("Build ID", strconv.FormatInt(b.Id, 10)).
+		Field("Branch", b.Revision).
+		Field("Revision", b.FullRevision)
+
+	switch b.Status {
+	case images.Build_SUCCEEDED:
+		msg.Color("good")
+	case images.Build_FAILED:
+		msg.Color("danger")
+	default:
+		msg.Color("")
+	}
 }
 
 // ByTimestamp wraps a slice of Images and defines them to be sorted by the timestamp

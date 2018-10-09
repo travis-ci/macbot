@@ -89,6 +89,11 @@ func (b *MessageBuilder) Field(title string, text string, args ...interface{}) *
 	return b
 }
 
+func (b *MessageBuilder) ClearFields() *MessageBuilder {
+	b.fields = nil
+	return b
+}
+
 // Send sends the message as a reply to the conversation.
 // The message builder keeps track of the timestamp of the message, allowing
 // the same builder to be used to later update the message.

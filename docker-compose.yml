@@ -3,9 +3,36 @@ version: "3"
 services:
   macbot:
     build: .
+    environment:
+      MACBOT_IMAGED_URL: http://imaged:8080
     env_file: .env.dev
     command: ["-debug"]
     networks:
       - bot
+  imaged:
+    image: travisci/imaged
+    environment:
+      IMAGED_DEBUG: "true"
+      IMAGED_DATABASE_URL: postgres://imaged:imaged@db/imaged?sslmode=disable
+      IMAGED_TEMPLATES_URL: https://github.com/travis-ci/packer-templates-mac.git
+      IMAGED_ANSIBLE_SECRETS_FILE: /run/secrets/ansible.yml
+    env_file: ../imaged/.env.dev
+    volumes:
+    - "../imaged/secrets:/run/secrets"
+    networks:
+    - bot
+    depends_on:
+    - db
+  db:
+    image: postgres:10
+    environment:
+      POSTGRES_USER: imaged
+      POSTGRES_PASSWORD: imaged
+    networks:
+    - bot
+    volumes:
+    - "pgdata:/var/lib/postgresql/data"
 networks:
   bot:
+volumes:
+  pgdata:
