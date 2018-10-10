@@ -8,7 +8,6 @@ import (
 	"golang.org/x/sync/semaphore"
 	"log"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -236,19 +235,31 @@ func buildFinished(b *images.Build) bool {
 	return b.Status == images.Build_SUCCEEDED || b.Status == images.Build_FAILED
 }
 
-func buildStatus(s images.Build_Status) string {
-	switch s {
+func buildStatus(b *images.Build) string {
+	switch b.Status {
 	case images.Build_CREATED:
 		return "Waiting to start"
 	case images.Build_STARTED:
 		return "Building"
 	case images.Build_SUCCEEDED:
-		return "Succeeded"
+		return buildLogLink(b, "Succeeded")
 	case images.Build_FAILED:
-		return "Failed"
+		return buildLogLink(b, "Failed")
 	default:
 		return "Unknown"
 	}
+}
+
+func buildLogLink(b *images.Build, text string) string {
+	resp, err := imagesClient.GetRecordURL(context.Background(), &images.GetRecordURLRequest{
+		BuildId:  b.Id,
+		FileName: "build.log",
+	})
+	if err != nil {
+		return text
+	}
+
+	return "<" + resp.Url + "|" + text + ">"
 }
 
 const templatesURL = "https://github.com/travis-ci/packer-templates-mac"
@@ -273,12 +284,12 @@ func updateMessage(msg *MessageBuilder, b *images.Build) {
 
 	msg.
 		ClearFields().
-		ShortField("Build ID", strconv.FormatInt(b.Id, 10)).
-		ShortField("Status", buildStatus(b.Status)).
-		ShortField("Branch", githubTreeLink(b.Revision, ""))
+		ShortField("Build ID", "%d", b.Id).
+		ShortField("Status", "%s", buildStatus(b)).
+		ShortField("Branch", "%s", githubTreeLink(b.Revision, ""))
 
 	if revision != "" {
-		msg.ShortField("Revision", githubTreeLink(b.FullRevision, revision))
+		msg.ShortField("Revision", "%s", githubTreeLink(b.FullRevision, revision))
 	}
 
 	switch b.Status {

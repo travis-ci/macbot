@@ -90,11 +90,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f3cb115de3207b4c8062bebc4219a550db2d55bda642c1928873d5eadd7c71b8"
+  digest = "1:f95e606cc9f691a76465aedd92a131f7e14a9710eec09ca6ea661ded785afbd8"
   name = "github.com/travis-ci/imaged"
   packages = ["rpc/images"]
   pruneopts = "UT"
-  revision = "b00de407dcc0e9c190942038ab65fd8a85b57be5"
+  revision = "1866199d7a3b447259a34649c6a04fb2891d7469"
 
 [[projects]]
   branch = "master"
