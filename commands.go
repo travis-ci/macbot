@@ -185,10 +185,14 @@ func LastImageBuild(ctx context.Context, conv Conversation) {
 // BuildImage starts a new image build and watches as it changes.
 func BuildImage(ctx context.Context, conv Conversation) {
 	image := conv.String("image")
+	branch := conv.String("branch")
+	if branch == "" {
+		branch = "master"
+	}
 
 	resp, err := imagesClient.StartBuild(ctx, &images.StartBuildRequest{
 		Name:     image,
-		Revision: "master",
+		Revision: branch,
 	})
 	if err != nil {
 		ReplyTo(conv).ErrorText("I couldn't start the build.").Error(err).Send()

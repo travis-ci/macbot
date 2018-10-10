@@ -55,6 +55,7 @@ func main() {
 
 	router.HandleFunc("last build of <image>", LastImageBuild)
 	router.HandleFunc("last build for <image>", LastImageBuild)
+	router.HandleFunc("build image <image> at <branch>", BuildImage)
 	router.HandleFunc("build image <image>", BuildImage)
 
 	for msg := range rtm.IncomingEvents {
