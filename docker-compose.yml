@@ -5,6 +5,8 @@ services:
     build: .
     environment:
       MACBOT_IMAGED_URL: http://imaged:8080
+      MACBOT_JOB_BOARD_PRODUCTION_URL: https://job-board-production.herokuapp.com
+      MACBOT_JOB_BOARD_STAGING_URL: https://job-board-staging.herokuapp.com
     env_file: .env.dev
     command: ["-debug"]
     networks:

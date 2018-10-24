@@ -15,6 +15,7 @@ import (
 
 var backend Backend
 var imagesClient images.Images
+var jobBoards map[string]*JobBoard
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var debug = flag.Bool("debug", false, "use debugging backend, don't talk to vsphere")
@@ -31,6 +32,7 @@ func main() {
 
 	setupBackend()
 	setupImagesClient()
+	setupJobBoards()
 
 	token := os.Getenv("SLACK_API_TOKEN")
 	api := slack.New(token)
@@ -57,6 +59,9 @@ func main() {
 	router.HandleFunc("last build for <image>", LastImageBuild)
 	router.HandleFunc("build image <image> at <branch>", BuildImage)
 	router.HandleFunc("build image <image>", BuildImage)
+
+	router.HandleFunc("register image <image> as <tag> in <env>", RegisterImage)
+	router.HandleFunc("register image <image> as <tag>", RegisterImage)
 
 	for msg := range rtm.IncomingEvents {
 		ctx := context.Background()
@@ -144,4 +149,22 @@ func setupVSphereBackend() {
 
 func setupImagesClient() {
 	imagesClient = images.NewImagesProtobufClient(os.Getenv("MACBOT_IMAGED_URL"), &http.Client{})
+}
+
+func setupJobBoards() {
+	jobBoards = make(map[string]*JobBoard)
+
+	url := os.Getenv("MACBOT_JOB_BOARD_PRODUCTION_URL")
+	password := os.Getenv("MACBOT_JOB_BOARD_PRODUCTION_PASSWORD")
+
+	if url != "" && password != "" {
+		jobBoards["production"] = NewJobBoard(url, password)
+	}
+
+	url = os.Getenv("MACBOT_JOB_BOARD_STAGING_URL")
+	password = os.Getenv("MACBOT_JOB_BOARD_STAGING_PASSWORD")
+
+	if url != "" && password != "" {
+		jobBoards["staging"] = NewJobBoard(url, password)
+	}
 }
