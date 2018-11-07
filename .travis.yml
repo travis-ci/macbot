@@ -16,5 +16,6 @@ deploy:
   script: bin/docker-push
   on:
     repo: travis-ci/macbot
+    all_branches: true
 notifications:
   email: false
