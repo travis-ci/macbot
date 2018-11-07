@@ -15,6 +15,6 @@ deploy:
   provider: script
   script: bin/docker-push
   on:
-    branch: master
+    repo: travis-ci/macbot
 notifications:
   email: false
