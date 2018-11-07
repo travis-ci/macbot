@@ -10,7 +10,7 @@ install: true # don't `go get` a bunch of junk, we'll get it with dep
 script:
   - dep ensure -vendor-only
   - go test
-  - docker build -t travisci/macbot .
+  - bin/docker-build
 deploy:
   provider: script
   script: bin/docker-push

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+version=$(git describe --always --dirty --tags 2>/dev/null)
+docker build -t "travisci/macbot:$version" .
