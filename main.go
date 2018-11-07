@@ -38,7 +38,9 @@ func main() {
 	api := slack.New(token)
 	logger := log.New(os.Stderr, "macbot: ", log.Lshortfile|log.LstdFlags)
 	slack.SetLogger(logger)
-	api.SetDebug(true)
+	if *debug {
+		api.SetDebug(true)
+	}
 
 	rtm = api.NewRTM()
 	go rtm.ManageConnection()
