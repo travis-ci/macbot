@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"github.com/nlopes/slack"
+	log "github.com/sirupsen/logrus"
 	"github.com/travis-ci/imaged/rpc/images"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -23,6 +23,8 @@ var debug = flag.Bool("debug", false, "use debugging backend, don't talk to vsph
 var rtm *slack.RTM
 
 func main() {
+	log.SetLevel(log.DebugLevel)
+
 	flag.Parse()
 
 	if *cpuprofile != "" {
@@ -36,11 +38,6 @@ func main() {
 
 	token := os.Getenv("SLACK_API_TOKEN")
 	api := slack.New(token)
-	logger := log.New(os.Stderr, "macbot: ", log.Lshortfile|log.LstdFlags)
-	slack.SetLogger(logger)
-	if *debug {
-		api.SetDebug(true)
-	}
 
 	rtm = api.NewRTM()
 	go rtm.ManageConnection()
@@ -65,6 +62,8 @@ func main() {
 	router.HandleFunc("register image <image> as <tag> in <env>", RegisterImage)
 	router.HandleFunc("register image <image> as <tag>", RegisterImage)
 
+	log.Info("listening for incoming slack events")
+
 	for msg := range rtm.IncomingEvents {
 		ctx := context.Background()
 		switch ev := msg.Data.(type) {
@@ -84,10 +83,10 @@ func dispatchCommand(ctx context.Context, router *Router, msg *slack.MessageEven
 func measureCPUUsage(profile string) {
 	f, err := os.Create(profile)
 	if err != nil {
-		log.Fatal("could not create CPU profile: ", err)
+		log.WithError(err).Fatal("could not create CPU profile")
 	}
 	if err := pprof.StartCPUProfile(f); err != nil {
-		log.Fatal("could not start CPU profile: ", err)
+		log.WithError(err).Fatal("could not start CPU profile")
 	}
 }
 
@@ -96,9 +95,9 @@ func setupInterruptHandler() {
 	signal.Notify(signalChan, os.Interrupt)
 	go func() {
 		<-signalChan
-		log.Println("received interrupt, shutting down...")
+		log.Info("received interrupt, shutting down")
 		if *cpuprofile != "" {
-			log.Println("writing CPU profile...")
+			log.Info("writing CPU profile")
 			pprof.StopCPUProfile()
 		}
 		os.Exit(0)
@@ -106,11 +105,16 @@ func setupInterruptHandler() {
 }
 
 func setupBackend() {
+	var backend string
 	if *debug {
+		backend = "debug"
 		setupDebugBackend()
 	} else {
+		backend = "vsphere"
 		setupVSphereBackend()
 	}
+
+	log.WithField("backend", backend).Info("set up backend")
 }
 
 func setupDebugBackend() {
@@ -122,12 +126,12 @@ func setupDebugBackend() {
 func setupVSphereBackend() {
 	pod1URL, err := url.Parse(os.Getenv("VSPHERE_POD1_URL"))
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("could not parse pod-1 url")
 	}
 
 	pod2URL, err := url.Parse(os.Getenv("VSPHERE_POD2_URL"))
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("could not parse pod-2 url")
 	}
 
 	backend = &VSphereBackend{
@@ -150,7 +154,9 @@ func setupVSphereBackend() {
 }
 
 func setupImagesClient() {
-	imagesClient = images.NewImagesProtobufClient(os.Getenv("MACBOT_IMAGED_URL"), &http.Client{})
+	url := os.Getenv("MACBOT_IMAGED_URL")
+	imagesClient = images.NewImagesProtobufClient(url, &http.Client{})
+	log.WithField("url", url).Info("set up imaged client")
 }
 
 func setupJobBoards() {
@@ -160,6 +166,10 @@ func setupJobBoards() {
 	password := os.Getenv("MACBOT_JOB_BOARD_PRODUCTION_PASSWORD")
 
 	if url != "" && password != "" {
+		log.WithFields(log.Fields{
+			"env": "production",
+			"url": url,
+		}).Info("set up job board")
 		jobBoards["production"] = NewJobBoard(url, password)
 	}
 
@@ -167,6 +177,10 @@ func setupJobBoards() {
 	password = os.Getenv("MACBOT_JOB_BOARD_STAGING_PASSWORD")
 
 	if url != "" && password != "" {
+		log.WithFields(log.Fields{
+			"env": "staging",
+			"url": url,
+		}).Info("set up job board")
 		jobBoards["staging"] = NewJobBoard(url, password)
 	}
 }

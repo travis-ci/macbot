@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"github.com/dustin/go-humanize"
+	log "github.com/sirupsen/logrus"
 	"github.com/travis-ci/imaged/rpc/images"
-	"log"
 	"time"
 )
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/shomali11/commander"
+	log "github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -35,28 +36,40 @@ func (r *Router) HandleFunc(pattern string, fn HandlerFunc) {
 		pattern: pattern,
 		handler: fn,
 	})
+	log.WithField("pattern", pattern).Debug("added command to router")
 }
 
 // Reply sends a conversation to a registered handler if one matches.
 // If no handler matches, Reply will send an error reply message to the conversation.
 // If the command text is an empty string, Reply will ignore the message.
 func (r *Router) Reply(ctx context.Context, conv Conversation) {
+	entry := log.WithFields(log.Fields{
+		"user":    conv.User(),
+		"channel": conv.Channel(),
+	})
+
 	text := conv.CommandText()
 	if text == "" {
+		entry.Debug("ignoring irrelevant message")
 		return
 	}
+
+	entry = entry.WithField("command", text)
 
 	for _, c := range r.commands {
 		if props, ok := c.Match(text); ok {
 			conv.SetProperties(props)
+			entry.WithField("pattern", c.pattern).Info("handling command")
 			c.handler(ctx, conv)
 			return
 		}
 	}
 
 	if text == "help" {
+		entry.Info("sending help")
 		r.help(ctx, conv)
 	} else {
+		entry.Warn("handling unknown command")
 		r.unknownCommand(ctx, conv)
 	}
 }

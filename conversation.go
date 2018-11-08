@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/nlopes/slack"
 	"github.com/shomali11/proper"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 )
@@ -74,6 +75,12 @@ func (c *slackConversation) IsDirectMessage() bool {
 }
 
 func (c *slackConversation) Send(b *MessageBuilder) string {
+	log.WithFields(log.Fields{
+		"channel": c.Channel(),
+		"user":    c.User(),
+		"text":    b.text,
+	}).Info("sending reply")
+
 	options := messageOptions(b)
 	// TODO: check and probably log the error here
 	_, timestamp, _, _ := rtm.Client.SendMessage(c.Channel(), options...)
