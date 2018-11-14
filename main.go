@@ -59,6 +59,10 @@ func main() {
 	router.HandleFunc("build image <image> at <branch>", BuildImage)
 	router.HandleFunc("build image <image>", BuildImage)
 
+	router.HandleFunc("registered images in <env>", ListImages)
+	router.HandleFunc("job board images in <env>", ListImages)
+	router.HandleFunc("registered images", ListImages)
+	router.HandleFunc("job board images", ListImages)
 	router.HandleFunc("register image <image> as <tag> in <env>", RegisterImage)
 	router.HandleFunc("register image <image> as <tag>", RegisterImage)
 
