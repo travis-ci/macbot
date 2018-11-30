@@ -10,12 +10,12 @@ install: true # don't `go get` a bunch of junk, we'll get it with dep
 script:
   - dep ensure -vendor-only
   - go test
-  - bin/docker-build
-deploy:
-  provider: script
-  script: bin/docker-push
-  on:
-    repo: travis-ci/macbot
-    all_branches: true
+#  - bin/docker-build
+#deploy:
+#  provider: script
+#  script: bin/docker-push
+#  on:
+#    repo: travis-ci/macbot
+#    all_branches: true
 notifications:
   email: false
