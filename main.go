@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
+	"time"
 
 	"github.com/nlopes/slack"
 	log "github.com/sirupsen/logrus"
@@ -20,6 +21,7 @@ var jobBoards map[string]*JobBoard
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var debug = flag.Bool("debug", false, "use debugging backend, don't talk to vsphere")
+var maxQuiet = flag.Duration("maxquiet", time.Hour, "maximum time to wait for an event before exiting")
 
 var rtm *slack.RTM
 
@@ -71,13 +73,32 @@ func main() {
 
 	log.Info("listening for incoming slack events")
 
+	lastEvent := make(chan interface{})
+	go watchForDisconnect(lastEvent)
+
 	for msg := range rtm.IncomingEvents {
+		// reset inactivity timer
+		lastEvent <- struct{}{}
+
 		ctx := context.Background()
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
 			dispatchCommand(ctx, router, ev)
 		default:
 			// ignore
+		}
+	}
+}
+
+func watchForDisconnect(lastEvent chan interface{}) {
+	t := time.NewTimer(*maxQuiet)
+	for {
+		select {
+		case <-lastEvent:
+			t.Reset(*maxQuiet)
+		case <-t.C:
+			log.Info("exiting due to inactivity")
+			os.Exit(1)
 		}
 	}
 }
