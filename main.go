@@ -3,14 +3,15 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/nlopes/slack"
-	log "github.com/sirupsen/logrus"
-	"github.com/travis-ci/imaged/rpc/images"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
 	"runtime/pprof"
+
+	"github.com/nlopes/slack"
+	log "github.com/sirupsen/logrus"
+	"github.com/travis-ci/imaged/rpc/images"
 )
 
 var backend Backend
@@ -65,6 +66,8 @@ func main() {
 	router.HandleFunc("job board images", ListImages)
 	router.HandleFunc("register image <image> as <tag> in <env>", RegisterImage)
 	router.HandleFunc("register image <image> as <tag>", RegisterImage)
+	router.HandleFunc("unregister image <image> in <env>", UnregisterImage)
+	router.HandleFunc("unregister image <image>", UnregisterImage)
 
 	log.Info("listening for incoming slack events")
 

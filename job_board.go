@@ -104,6 +104,22 @@ func (jb *JobBoard) RegisterImage(ctx context.Context, image, tag string) error 
 	return err
 }
 
+// DeleteImage removes an image from job board.
+func (jb *JobBoard) DeleteImage(ctx context.Context, image string) error {
+	v := url.Values{}
+	v.Set("infra", "jupiterbrain")
+	v.Set("name", image)
+
+	u := "/images?" + v.Encode()
+	req, err := jb.newRequest("GET", u, nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = jb.client.Do(req)
+	return err
+}
+
 func (jb *JobBoard) newRequest(method, path string, body io.Reader) (*http.Request, error) {
 	url := jb.Host + path
 	r, err := http.NewRequest(method, url, body)

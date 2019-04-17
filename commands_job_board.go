@@ -62,3 +62,30 @@ func RegisterImage(ctx context.Context, conv Conversation) {
 		ShortField("Environment", env).
 		Send()
 }
+
+// UnregisterImage removes an image from job board.
+func UnregisterImage(ctx context.Context, conv Conversation) {
+	image := conv.String("image")
+	env := conv.String("env")
+	if env == "" {
+		env = "production"
+	}
+
+	jb, found := jobBoards[env]
+	if !found {
+		ReplyTo(conv).ErrorText("No job board is configured for the %s environment.", env).Send()
+		return
+	}
+
+	if err := jb.DeleteImage(ctx, image); err != nil {
+		ReplyTo(conv).ErrorText("I couldn't unregister the image with job board.").Error(err).Send()
+		return
+	}
+
+	ReplyTo(conv).
+		AttachText("Successfully unregistered image for <@%s>", conv.User()).
+		Color("good").
+		Field("Image", image).
+		ShortField("Environment", env).
+		Send()
+}
