@@ -111,7 +111,7 @@ func (jb *JobBoard) DeleteImage(ctx context.Context, image string) error {
 	v.Set("name", image)
 
 	u := "/images?" + v.Encode()
-	req, err := jb.newRequest("GET", u, nil)
+	req, err := jb.newRequest("DELETE", u, nil)
 	if err != nil {
 		return err
 	}
